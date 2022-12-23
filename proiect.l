@@ -4,6 +4,8 @@
 %}
 %option noyywrap
 %%
+"Eval" {return EVAL;}
+"TypeOf" {return TYPEOF;}
 "nou tip"|"new type" {return NEWTYPE;}
 "int" {return INT;}
 "float" {return FLOAT;}

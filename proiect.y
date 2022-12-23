@@ -4,7 +4,7 @@ extern FILE* yyin;
 extern char* yytext;
 extern int yylineno;
 %}
-%token ID NR LIT NEWTYPE INT CHAR FLOAT BOOL STRING IF WHILE FOR BGIN END DEFINE CONST ASSIGN PLUS MINUS ADD DEDUCT EQUAL DIV MOD AND OR NOT XOR MAIN
+%token ID NR LIT NEWTYPE INT CHAR FLOAT BOOL STRING IF WHILE FOR BGIN END DEFINE CONST ASSIGN PLUS MINUS ADD DEDUCT EQUAL DIV MOD AND OR NOT XOR MAIN EVAL TYPEOF
 %start progr
 %%
 progr : var_globale functii user_types bloc {printf("program corect sintactic\n");}
@@ -14,6 +14,7 @@ progr : var_globale functii user_types bloc {printf("program corect sintactic\n"
       | user_types bloc {printf("program corect sintactic\n");}
       | functii bloc {printf("program corect sintactic\n");}
       | var_globale bloc {printf("program corect sintactic\n");}
+      | bloc {printf("program corect sintactic\n");}
       ;   
 var_globale : definitii declaratii
             | definitii
@@ -74,19 +75,28 @@ VAR : ID
 statement : VAR NEWVAL VAR
           | VAR NEWVAL NR
           | ID ASSIGN ID  		 
-          | VAR ASSIGN operation
-          | VAR ASSIGN '(' operation ')'
+          | VAR ASSIGN op_list
+          | VAR ASSIGN '(' op_list ')'
           | IF '(' lista_cond ')' '{' list '}'
           | IF '(' lista_cond ')' statement
-          | FOR '(' list ';' lista_cond ';' list ')' '{' list '}'
-          | FOR '(' list ';' lista_cond ';' list ')' statement
+          | FOR '(' statement ';' lista_cond ';' statement ')' '{' list '}'
+          | FOR '(' statement ';' lista_cond ';' statement ')' statement
           | WHILE '(' lista_cond ')' '{' list '}'
           | WHILE '(' lista_cond ')' statement
+          | EVAL '(' VAR ')' ';'
+          | EVAL '(' NR ')' ';'
+          | EVAL '(' op_list ')' ';'
+          | TYPEOF '(' VAR ')' ';'
+          | TYPEOF '(' NR ')' ';'
+          | TYPEOF '(' LIT ')' ';'
           ;
 NEWVAL : ASSIGN
        | ADD
        | DEDUCT
        ;
+op_list : operation
+        | '(' op_list ')' operation
+        ;
 operation : VAR OP VAR
           | VAR OP NR
           | NR OP VAR  
