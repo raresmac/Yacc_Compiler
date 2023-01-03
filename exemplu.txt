@@ -1,0 +1,17 @@
+int a1;
+DEFINESTE b1 3;
+int incrementare(int a1)
+BGIN
+    a1 devine a1 plus 1;
+END
+MAIN
+
+BGIN
+    a1 devine 6;
+    daca(b1 NU E 3){
+        a1 devine 5;
+    }
+    daca(b1 NU E 4){
+        a1 devine a1 minus 3;
+    }
+END

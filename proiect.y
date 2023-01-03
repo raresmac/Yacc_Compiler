@@ -32,7 +32,6 @@ struct simbol SymbolTable[1024];
 
 void insertVarTable(char *nume, struct tip_t *tip);
 void insertFuncTable(char *nume, struct tip_t *ret, struct lista_param_t *param);
-void insertStructTable(char *nume);
 void printTable();
 void varDefinita(char *nume);
 void funDefinita(char *nume);
@@ -46,14 +45,70 @@ void apelCorect(struct expresie_apel *apel);
 %token ID NR LIT NEWTYPE INT CHAR FLOAT BOOL STRING IF WHILE FOR BGIN END DEFINE CONST ASSIGN PLUS MINUS ADD DEDUCT EQUAL DIV MOD AND OR NOT XOR MAIN EVAL TYPEOF
 %start progr
 %%
-progr : var_globale functii user_types bloc {printf("program corect sintactic\n");}
-      | functii user_types bloc {printf("program corect sintactic\n");}
-      | var_globale user_types bloc {printf("program corect sintactic\n");}
-      | var_globale functii bloc {printf("program corect sintactic\n");}
-      | user_types bloc {printf("program corect sintactic\n");}
-      | functii bloc {printf("program corect sintactic\n");}
-      | var_globale bloc {printf("program corect sintactic\n");}
-      | bloc {printf("program corect sintactic\n");}
+progr : var_globale functii user_types bloc  {printf("Sintaxă corectă\n");
+                                             if (corect) {
+                                             printf("Corect semantic\n");
+                                             printTable();
+                                             }
+                                             else
+                                             printf("Incorect semantic\n");
+                                             }
+      | functii user_types bloc {printf("Sintaxă corectă\n");
+                              if (corect) {
+                              printf("Corect semantic\n");
+                              printTable();
+                              }
+                              else
+                              printf("Incorect semantic\n");
+                              }
+      | var_globale user_types bloc {printf("Sintaxă corectă\n");
+                                   if (corect) {
+                                   printf("Corect semantic\n");
+                                   printTable();
+                                   }
+                                   else
+                                   printf("Incorect semantic\n");
+                                   }
+      | var_globale functii bloc {printf("Sintaxă corectă\n");
+                                   if (corect) {
+                                   printf("Corect semantic\n");
+                                   printTable();
+                                   }
+                                   else
+                                   printf("Incorect semantic\n");
+                                   }
+      | user_types bloc {printf("Sintaxă corectă\n");
+                         if (corect) {
+                         printf("Corect semantic\n");
+                         printTable();
+                         }
+                         else
+                         printf("Incorect semantic\n");
+                         }
+      | functii bloc {printf("Sintaxă corectă\n");
+                    if (corect) {
+                    printf("Corect semantic\n");
+                    printTable();
+                    }
+                    else
+                    printf("Incorect semantic\n");
+                    }
+      | var_globale bloc {printf("Sintaxă corectă\n");
+                         if (corect) {
+                         printf("Corect semantic\n");
+                         printTable();
+                         }
+                         else
+                         printf("Incorect semantic\n");
+                         }
+      | bloc {printf("Sintaxă corectă\n");
+              if (corect) {
+               printf("Corect semantic\n");
+               printTable();
+               }
+               else
+               printf("Incorect semantic\n");
+               }
       ;   
 var_globale : definitii declaratii
             | definitii
@@ -68,16 +123,73 @@ definitie : DEFINE ID NR
 declaratii :  declaratie ';'
 	   | declaratii declaratie ';'
 	   ;
-declaratie : TIP ID 
-           | TIP ID ASSIGN NR
-           | CHAR ID ASSIGN LIT
-           | TIP ID '[' ']' ASSIGN '{' lista_nr '}'
-           | CHAR ID '[' ']' ASSIGN '{' lista_lit '}'
-           | STRING ID ASSIGN '{' lista_lit '}'
-           | TIP ID '[' NR ']'
-           | CONST TIP ID '[' ']' ASSIGN '{' lista_nr '}'
-           | CONST CHAR ID '[' ']' ASSIGN '{' lista_lit '}'
-           | CONST STRING ID ASSIGN '{' lista_lit '}'         
+declaratie : TIP ID {
+                    structDefinita($1->nume);
+                    insertVarTable($2, $1);
+                    }
+           | TIP ID ASSIGN NR {
+                              structDefinita($1->nume);
+                              struct tip_t tip_expr;
+                              tipExpr($4, &tip_expr);
+                              tipuriEgale(&tip_expr, $1);
+                              insertVarTable($2, $1);
+                              }
+           | CHAR ID ASSIGN LIT{
+                              structDefinita($1->nume);
+                              struct tip_t tip_expr;
+                              tipExpr($4, &tip_expr);
+                              tipuriEgale(&tip_expr,"char");
+                              insertVarTable($2,"char");
+                              }
+           | TIP ID '[' ']' ASSIGN '{' lista_nr '}'{
+                              structDefinita($1->nume);
+                              struct tip_t tip_expr;
+                              tipExpr($7, &tip_expr);
+                              tipuriEgale(&tip_expr, $1);
+                              insertVarTable($2, $1);
+                              }
+           | CHAR ID '[' ']' ASSIGN '{' lista_lit '}'{
+                              structDefinita($1->nume);
+                              struct tip_t tip_expr;
+                              tipExpr($7, &tip_expr);
+                              tipuriEgale(&tip_expr, "char");
+                              insertVarTable($2, "char");
+                              }
+           | STRING ID ASSIGN '{' lista_lit '}'{
+                              structDefinita($1->nume);
+                              struct tip_t tip_expr;
+                              tipExpr($5, &tip_expr);
+                              tipuriEgale(&tip_expr, "string");
+                              insertVarTable($2, "string");
+                              }
+           | TIP ID '[' NR ']'{
+                              structDefinita($1->nume);
+                              struct tip_t tip_expr;
+                              tipExpr($4, &tip_expr);
+                              tipuriEgale(&tip_expr, $1);
+                              insertVarTable($2, $1);
+                              }
+           | CONST TIP ID '[' ']' ASSIGN '{' lista_nr '}'{
+                              structDefinita($1->nume);
+                              struct tip_t tip_expr;
+                              tipExpr($4, &tip_expr);
+                              tipuriEgale(&tip_expr, $1);
+                              insertVarTable($2, $1);
+                              }
+           | CONST CHAR ID '[' ']' ASSIGN '{' lista_lit '}'{
+                              structDefinita($1->nume);
+                              struct tip_t tip_expr;
+                              tipExpr($8, &tip_expr);
+                              tipuriEgale(&tip_expr, "char");
+                              insertVarTable($3, "char");
+                              }
+           | CONST STRING ID ASSIGN '{' lista_lit '}'{
+                              structDefinita($1->nume);
+                              struct tip_t tip_expr;
+                              tipExpr($6, &tip_expr);
+                              tipuriEgale(&tip_expr, "string");
+                              insertVarTable($3, "string");
+                              }
            ;
 TIP : INT
     | FLOAT
@@ -94,6 +206,10 @@ functii : functie ';'
         | functii functie ';' 
         ;
 functie : TIP ID '(' lista_param ')' BGIN list END
+                {
+                    insertFuncTable($3, $2, $5);
+                    functie_curenta = $3;
+                }
         ;
 lista_param : param
             | lista_param ',' param
@@ -113,9 +229,27 @@ VAR : ID
     ;
 statement : VAR NEWVAL VAR
           | VAR NEWVAL NR
-          | ID ASSIGN ID  		 
-          | VAR ASSIGN op_list
-          | VAR ASSIGN '(' op_list ')'
+          | ID ASSIGN ID {
+                         varDefinita($1);
+                         struct tip_t tip_expr;
+                         tipExpr($3, &tip_expr);
+                         struct tip_t *tip_var = tipVar($1);
+                         tipuriEgale(&tip_expr, tip_var);
+                         }	 
+          | VAR ASSIGN op_list{
+                              varDefinita($1);
+                              struct tip_t tip_expr;
+                              tipExpr($3, &tip_expr);
+                              struct tip_t *tip_var = tipVar($1);
+                              tipuriEgale(&tip_expr, tip_var);
+                              }	
+          | VAR ASSIGN '(' op_list ')'{
+                                        varDefinita($1);
+                                        struct tip_t tip_expr;
+                                        tipExpr($3, &tip_expr);
+                                        struct tip_t *tip_var = tipVar($1);
+                                        tipuriEgale(&tip_expr, tip_var);
+                                        }	
           | IF '(' lista_cond ')' '{' list '}'
           | IF '(' lista_cond ')' statement
           | FOR '(' statement ';' lista_cond ';' statement ')' '{' list '}'
@@ -123,7 +257,11 @@ statement : VAR NEWVAL VAR
           | WHILE '(' lista_cond ')' '{' list '}'
           | WHILE '(' lista_cond ')' statement
           | EVAL '(' VAR ')' ';'
-          | EVAL '(' NR ')' ';'
+          | EVAL '(' NR ')' ';' {if (corect){
+                                             if((int)$3->val == $3->val){
+                                                  printf("Rezultatul expresiei din eval este %d\n", (int)$3->val);
+                                             }
+                                             else {printf("Valorile nu sunt de tip int\n");}}}
           | EVAL '(' op_list ')' ';'
           | TYPEOF '(' VAR ')' ';'
           | TYPEOF '(' NR ')' ';'
@@ -216,14 +354,6 @@ void insertFuncTable(char *nume, struct tip_t *ret, struct lista_param_t *param)
     SymbolTable[nrSimboluri].param = param;
     nrSimboluri++;
 }
-
-void insertStructTable(char *nume){
-    checkTable(nume);
-    SymbolTable[nrSimboluri].tip_simbol = SIMBOL_STRUCTURA;
-    SymbolTable[nrSimboluri].nume = nume;
-    nrSimboluri++;
-}
-
 void printTip(FILE *f, struct tip_t *tip) {
     if (tip != NULL) {
         fprintf(f, "%s", tip->nume);
