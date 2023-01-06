@@ -54,37 +54,39 @@ extern int yydebug;
     YYEOF = 0,                     /* "end of file"  */
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
-    ID = 258,                      /* ID  */
-    NR = 259,                      /* NR  */
-    LIT = 260,                     /* LIT  */
-    NEWTYPE = 261,                 /* NEWTYPE  */
-    INT = 262,                     /* INT  */
-    CHAR = 263,                    /* CHAR  */
-    FLOAT = 264,                   /* FLOAT  */
-    BOOL = 265,                    /* BOOL  */
-    STRING = 266,                  /* STRING  */
-    IF = 267,                      /* IF  */
-    WHILE = 268,                   /* WHILE  */
-    FOR = 269,                     /* FOR  */
-    BGIN = 270,                    /* BGIN  */
-    END = 271,                     /* END  */
-    DEFINE = 272,                  /* DEFINE  */
-    CONST = 273,                   /* CONST  */
-    ASSIGN = 274,                  /* ASSIGN  */
-    PLUS = 275,                    /* PLUS  */
-    MINUS = 276,                   /* MINUS  */
-    ADD = 277,                     /* ADD  */
-    DEDUCT = 278,                  /* DEDUCT  */
-    EQUAL = 279,                   /* EQUAL  */
-    DIV = 280,                     /* DIV  */
-    MOD = 281,                     /* MOD  */
-    AND = 282,                     /* AND  */
-    OR = 283,                      /* OR  */
-    NOT = 284,                     /* NOT  */
-    XOR = 285,                     /* XOR  */
-    MAIN = 286,                    /* MAIN  */
-    EVAL = 287,                    /* EVAL  */
-    TYPEOF = 288                   /* TYPEOF  */
+    LIT = 258,                     /* LIT  */
+    ID = 259,                      /* ID  */
+    INT = 260,                     /* INT  */
+    FLOAT = 261,                   /* FLOAT  */
+    CHAR = 262,                    /* CHAR  */
+    BOOL = 263,                    /* BOOL  */
+    STRING = 264,                  /* STRING  */
+    NEWTYPE = 265,                 /* NEWTYPE  */
+    IF = 266,                      /* IF  */
+    WHILE = 267,                   /* WHILE  */
+    FOR = 268,                     /* FOR  */
+    BGIN = 269,                    /* BGIN  */
+    END = 270,                     /* END  */
+    DEFINE = 271,                  /* DEFINE  */
+    CONST = 272,                   /* CONST  */
+    TYPEOF = 273,                  /* TYPEOF  */
+    NR = 274,                      /* NR  */
+    GR = 275,                      /* GR  */
+    LW = 276,                      /* LW  */
+    ASSIGN = 277,                  /* ASSIGN  */
+    PLUS = 278,                    /* PLUS  */
+    MINUS = 279,                   /* MINUS  */
+    ADD = 280,                     /* ADD  */
+    DEDUCT = 281,                  /* DEDUCT  */
+    EQUAL = 282,                   /* EQUAL  */
+    DIV = 283,                     /* DIV  */
+    MOD = 284,                     /* MOD  */
+    AND = 285,                     /* AND  */
+    OR = 286,                      /* OR  */
+    NOT = 287,                     /* NOT  */
+    XOR = 288,                     /* XOR  */
+    EVAL = 289,                    /* EVAL  */
+    MAIN = 290                     /* MAIN  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -93,41 +95,62 @@ extern int yydebug;
 #define YYEOF 0
 #define YYerror 256
 #define YYUNDEF 257
-#define ID 258
-#define NR 259
-#define LIT 260
-#define NEWTYPE 261
-#define INT 262
-#define CHAR 263
-#define FLOAT 264
-#define BOOL 265
-#define STRING 266
-#define IF 267
-#define WHILE 268
-#define FOR 269
-#define BGIN 270
-#define END 271
-#define DEFINE 272
-#define CONST 273
-#define ASSIGN 274
-#define PLUS 275
-#define MINUS 276
-#define ADD 277
-#define DEDUCT 278
-#define EQUAL 279
-#define DIV 280
-#define MOD 281
-#define AND 282
-#define OR 283
-#define NOT 284
-#define XOR 285
-#define MAIN 286
-#define EVAL 287
-#define TYPEOF 288
+#define LIT 258
+#define ID 259
+#define INT 260
+#define FLOAT 261
+#define CHAR 262
+#define BOOL 263
+#define STRING 264
+#define NEWTYPE 265
+#define IF 266
+#define WHILE 267
+#define FOR 268
+#define BGIN 269
+#define END 270
+#define DEFINE 271
+#define CONST 272
+#define TYPEOF 273
+#define NR 274
+#define GR 275
+#define LW 276
+#define ASSIGN 277
+#define PLUS 278
+#define MINUS 279
+#define ADD 280
+#define DEDUCT 281
+#define EQUAL 282
+#define DIV 283
+#define MOD 284
+#define AND 285
+#define OR 286
+#define NOT 287
+#define XOR 288
+#define EVAL 289
+#define MAIN 290
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef int YYSTYPE;
+union YYSTYPE
+{
+#line 141 "proiect.y"
+
+    int val;
+    char *strval;
+    char charval;
+    struct info *inf;
+    struct lista_nr_t *lista_nr_t;
+    struct lista_lit_t *lista_lit_t;
+    struct lista_param_t *lista_param_t;
+    struct param *param;
+    struct expresie *expresie;
+    struct var *v; 
+    struct tip_t* tip;
+
+#line 151 "y.tab.h"
+
+};
+typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
 #endif

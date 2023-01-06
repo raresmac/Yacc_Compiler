@@ -10,25 +10,91 @@ char *functie_curenta = NULL;
 char *structura_curenta = NULL;
 int corect = 1;
 
+int yylex();
+int yyerror();
+
 FILE *fisier_tabela;
-//struct expresie_apel ??
-//struct expresie  ??
-//struct lista_nr_t
-//struct lista_lit_t
-//struct lista_param_t
+
+struct expresie_str {
+    char *val;
+    struct expresie_str *str1, *str2;
+    struct expresie_apel *apel;
+    struct var *var;
+};
+
+struct expresie_bool {
+    bool val;
+    struct expresie_num *expr_comp_num1, *expr_comp_num2;
+    struct expresie_str *expr_comp_str1, *expr_comp_str2;
+    struct expresie_bool *expr_bool1, *expr_bool2;
+    struct expresie_apel *apel;
+    struct var *var;
+};
+
+struct expresie_num {
+    float val;
+    struct expresie_num *expr1, *expr2;
+    struct expresie_apel *apel;
+    struct var *var;
+};
+
+struct expresie {
+    enum {
+        EXPRESIE_NUM,
+        EXPRESIE_BOOL,
+        EXPRESIE_STR,
+        EXPRESIE_NEW,
+        EXPRESIE_APEL,
+        EXPRESIE_VAR
+    } tip_expr;
+    struct expresie_num *num;
+    struct expresie_bool *boolean;
+    struct expresie_str *str;
+    char *new;
+    struct expresie_apel *apel;
+    struct var *var;
+};
+
+struct lista_nr_t{
+    int nr;
+    struct lista_nr_t *urmator;
+};
+
+struct lista_lit_t{
+    char lit;
+    struct lista_lit_t *urmator;
+};
+
+struct lista_expresii {
+    struct expresie *expr;
+    struct lista_expresii *urmator;
+};
+
+struct expresie_apel {
+    char *fun;
+    struct lista_expresii *arg;
+};
+
+struct lista_param_t{
+    struct tip_t *tip;
+    char *nume;
+    struct lista_param_t *urmator;
+};
+
 struct tip_t {
     char *nume;
     int dimensiune;
     int numar[1024];
 };
+
 struct info
 {
-        int intval;
-        char strval[100];
-        float floatval;
-        char charval;
-        int type;
-        bool boolval;
+    int intval;
+    char strval[100];
+    float floatval;
+    char charval;
+    int type;
+    bool boolval;
 };
 
 struct param
@@ -36,32 +102,10 @@ struct param
 	char denumire[50];
 	struct info inf;
 };
-/*
-struct simbol
-{
-        char denumire[50];
-        int type;
-        int varconst;
-        int scope;
-        int intVal;
-        float floatVal;
-        char charVal;
-        char *stringVal;
-	int assigned;
-	int function;
-	struct param params[MAXPARAMS];
-	int vector;
-	int *intVector;
-	int index;
-	char *charVector;
-	char **stringVector;
-	int *boolVector;
-	float *floatVector;
-}SymbolTable[1024];
-*/
+
 struct var{
 	int index;
-	char * nume;
+	char *nume;
 };
 
 struct simbol{
@@ -78,7 +122,6 @@ struct simbol{
     struct expresie *init;
 }SymbolTable[1024];
 
-
 int nrSimboluri = 0;
 struct tip_t *initTip_t(char * val);
 struct var *initVar(char * val, int index);
@@ -88,26 +131,40 @@ void printTable();
 void varDefinita(char *nume);
 void funDefinita(char *nume);
 void structDefinita(char *nume);
-struct tip_t *tipVar(struct var * v);
+struct tip_t *tipVar(struct var *v);
 struct tip_t *tipRetFun(char *nume);
 struct tip_t *tipExpr(struct expresie *expr);
 void tipuriEgale(struct tip_t *stanga, struct tip_t *dreapta);
 void apelCorect(struct expresie_apel *apel);
 %}
+
+%union{
+    int val;
+    char *strval;
+    char charval;
+    struct info *inf;
+    struct lista_nr_t *lista_nr_t;
+    struct lista_lit_t *lista_lit_t;
+    struct lista_param_t *lista_param_t;
+    struct param *param;
+    struct expresie *expresie;
+    struct var *v; 
+    struct tip_t* tip;
+};
+
 %token <charval> LIT
 %token <strval> ID INT FLOAT CHAR BOOL STRING NEWTYPE IF WHILE FOR BGIN END DEFINE CONST TYPEOF
 %token <val> NR GR LW ASSIGN PLUS MINUS ADD DEDUCT EQUAL DIV MOD AND OR NOT XOR EVAL MAIN
 %type <tip> TIP
-//trebuie definite astea 3 tipuri si bagate cumva in union??
-%type <lista_nr_t> lista_nr 
-%type <lista_lit_t> lista_lit
+/*%type <lista_nr_t> lista_nr 
+%type <lista_lit_t> lista_lit*/
 %type <lista_param_t> lista_param
 %type <param> param
 %type <v> VAR
-%type <val> op_list
+%type <expresie> op_list lista_lit lista_nr
 
 %start progr
-%union{int val;char *strval;char charval;struct info *inf;struct param *params;struct var *v; struct tip_t* tip;};
+
 %%
 progr : var_globale functii user_types bloc  {printf("Sintaxă corectă\n");
                                              if (corect) {
@@ -276,15 +333,15 @@ functie : TIP ID '(' lista_param ')' BGIN list END
                     functie_curenta = $2;
                 }
         ;
-lista_param : param
-            | lista_param ',' param
+lista_param : param {$$ = 0;}
+            | lista_param ',' param {$$ = 0;}
             ;
 
-param : TIP ID
-      | TIP ID NEWVAL VAR
-      | TIP ID NEWVAL NR
-      | CONST TIP ID
-      | TIP ID '(' lista_param ')'
+param : TIP ID {$$ = 0;}
+      | TIP ID NEWVAL VAR {$$ = 0;}
+      | TIP ID NEWVAL NR {$$ = 0;}
+      | CONST TIP ID {$$ = 0;} 
+      | TIP ID '(' lista_param ')' {$$ = 0;}
       ;
 list :  statement ';' 
      | list statement ';'
@@ -337,8 +394,8 @@ NEWVAL : ASSIGN
        | ADD
        | DEDUCT
        ;
-op_list : operation
-        | '(' op_list ')' operation
+op_list : operation {$$ = 0;}
+        | '(' op_list ')' operation {$$ = 0;}
         ;
 operation : VAR OP VAR
           | VAR OP NR
@@ -364,10 +421,10 @@ OP_C : AND
      | GR
      | LW
      ;
-lista_nr : NR
+lista_nr : NR {$$ = 0;}
            | lista_nr ',' NR
            ;
-lista_lit : LIT
+lista_lit : LIT {$$ = 0;}
            | lista_lit ',' LIT
            ;
 bloc : MAIN BGIN list END
@@ -602,26 +659,15 @@ struct tip_t *tipExpr(struct expresie *expr) {
     } else if (expr->tip_expr == EXPRESIE_APEL) {
         tip = tipRetFun(expr->apel->fun);
     } else if (expr->tip_expr == EXPRESIE_VAR) {
-        tip = tipVar(expr->var->nume);
+        tip = tipVar(expr->var);
     }
     return tip;
 }
 
 void tipuriEgale(struct tip_t *stanga, struct tip_t *dreapta) {
     int egale = 1;
-    if (stanga != NULL && dreapta != NULL) {
-        if ((strcmp(stanga->nume, dreapta->nume) == 0 ||
-             (strcmp(stanga->nume, "int") == 0 && strcmp(dreapta->nume, "float") == 0) ||
-             (strcmp(dreapta->nume, "int") == 0 && strcmp(stanga->nume, "float") == 0)) &&
-            stanga->dimensiune == dreapta->dimensiune) {
-            for (int i = 0; i < stanga->dimensiune; ++i)
-                if (stanga->numar[i] == dreapta->numar[i]) {
-                    egale = 0; //AICI AJUNGE EGALE=0 INDIFERENT DE CAZ ??
-                    break;
-                }
-                else
-                    egale = 0;
-        } else {
+    if(stanga != NULL && dreapta != NULL){
+        if(strcmp(stanga->nume, dreapta->nume)){
             egale = 0;
         }
     } else {
