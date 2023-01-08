@@ -34,9 +34,12 @@
 "NU E"|"!=" {return NOT;}
 "xor"|"^" {return XOR;}
 "main:" {return MAIN;}
+"adevarat" {return TRU;}
+"fals" {return FALS;}
 [_a-zA-Z][_a-zA-Z0-9]* {return ID;}
-[0-9]+ {return NR;}
-'[a-zA-Z]' {return LIT;}
+[0-9]+|"-"[0-9]+ {return NRI;}
+[0-9]+"."[0-9]+|"-"[0-9]+"."[0-9]+ {return NRF;}
+"'"[a-zA-Z]"'" {return LIT;}
 [ \t] ;
 \n {yylineno++;}
 . {return yytext[0];}
