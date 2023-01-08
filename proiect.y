@@ -179,10 +179,10 @@ progr : var_globale functii user_types bloc  {printf("Sintaxă corectă\n");
                printf("Incorect semantic\n");
                }
       ;
-var_globale : declaratie
+var_globale : declaratie ';'
             | definitie
-            | var_globale definitie
-            | var_globale declaratie
+            | var_globale definitie 
+            | var_globale declaratie ';'
             ;
 definitie : DEFINE ID NR
           | DEFINE ID LIT
@@ -194,35 +194,41 @@ declaratii :  declaratie ';'{$$ = initTipListParam($1);}
                              }
 	   ;
 declaratie : TIP ID ASSIGN LIT{
+                              structDefinita($1->nume);
                               struct tip_t *tip_expr=initTip_t("char");
                               tipuriEgale(tip_expr, $1);
                               insertVarTable($2,tip_expr);
                               $$ = initTipParam($1,$2);
                               }
            | TIP ID '[' ']' ASSIGN '{' lista_lit '}'{
+                              structDefinita($1->nume);
                               struct tip_t *tip_expr=initTip_t("char");
                               tipuriEgale(tip_expr, $1);
                               insertVarTable($2, tip_expr);
                               $$ = initTipParam($1,$2);
                               }
            | TIP ID ASSIGN '{' lista_lit '}'{
+                              structDefinita($1->nume);
                               struct tip_t *tip_expr=initTip_t("string");
                               tipuriEgale(tip_expr, $1);
                               insertVarTable($2, tip_expr);
                               $$ = initTipParam($1,$2);
                               }
            | TIP ID '[' NR ']' ASSIGN '{' lista_lit '}'{
+                              structDefinita($1->nume);
                               tipuriEgale($4->tip, $1);
                               insertVarTable($2, $1);
                               $$ = initTipParam($1,$2);
                               }
            | CONST TIP ID '[' ']' ASSIGN '{' lista_lit '}'{
+                              structDefinita($2->nume);
                               struct tip_t *tip_expr=initTip_t("char");
                               tipuriEgale(tip_expr, $2);
                               insertVarTable($3, $2);
                               $$ = initTipParam($2,$3);
                               }
            | CONST TIP ID ASSIGN '{' lista_lit '}'{
+                              structDefinita($2->nume);
                               struct tip_t *tip_expr=initTip_t("string");
                               tipuriEgale(tip_expr, $2);
                               insertVarTable($3, $2);
@@ -379,7 +385,7 @@ lista_op : VAR operatie { tipuriEgale($2, tipVar($1)); $$=$2;}
          | lista_op operatie {tipuriEgale($1,$2);}
          | '(' lista_op ')' operatie {tipuriEgale($2,$4); $$=$2;}
          ;
-operatie : OP VAR {$$=tipVar($2);}
+operatie : OP VAR {$$=initTip_t("float");$$=tipVar($2);}
          | OP NR {$$=initTip_t("float");}
          | OP apel {$$=$2;}
          ;
@@ -451,8 +457,7 @@ printf("eroare: %s la linia:%d\n",s,yylineno);
 }
 
 void checkTable(char* nume){
-    int i;
-    for(i = 0; i < nrSimboluri; i++){
+    for(int i = 0; i < nrSimboluri; i++){
         if (((structura_curenta == NULL && SymbolTable[i].structura == NULL) ||
              (structura_curenta != NULL && SymbolTable[i].structura != NULL &&
               strcmp(structura_curenta, SymbolTable[i].structura) == 0)) &&
@@ -475,19 +480,21 @@ void checkTable(char* nume){
 
 void insertVarTable(char *nume, struct tip_t *tip){
     checkTable(nume);
+    
     SymbolTable[nrSimboluri].tip_simbol = SIMBOL_VARIABILA;
-    SymbolTable[nrSimboluri].nume = nume;
+    SymbolTable[nrSimboluri].nume = (char*) malloc(sizeof(char)*(strlen(nume)+1)); 
+    strcpy(SymbolTable[nrSimboluri].nume,nume);
     SymbolTable[nrSimboluri].functie = functie_curenta;
-     SymbolTable[nrSimboluri].structura = structura_curenta;
+    SymbolTable[nrSimboluri].structura = structura_curenta;
     SymbolTable[nrSimboluri].tip = tip;
-
     nrSimboluri++;
 }
 
 void insertFuncTable(char *nume, struct tip_t *ret, struct lista_param_t *param){
     checkTable(nume);
     SymbolTable[nrSimboluri].tip_simbol = SIMBOL_FUNCTIE;
-    SymbolTable[nrSimboluri].nume = nume;
+    SymbolTable[nrSimboluri].nume = (char*) malloc(sizeof(char)*(strlen(nume)+1)); 
+    strcpy(SymbolTable[nrSimboluri].nume,nume);
     SymbolTable[nrSimboluri].functie = functie_curenta;
     SymbolTable[nrSimboluri].structura = structura_curenta;
     SymbolTable[nrSimboluri].tip = ret;
@@ -498,12 +505,14 @@ void insertStructTable(char *nume, struct lista_param_t *param)
 {
     checkTable(nume);
     SymbolTable[nrSimboluri].tip_simbol = SIMBOL_STRUCTURA;
-    SymbolTable[nrSimboluri].nume = nume;
+    SymbolTable[nrSimboluri].nume = (char*) malloc(sizeof(char)*(strlen(nume)+1)); 
+    strcpy(SymbolTable[nrSimboluri].nume,nume);
     SymbolTable[nrSimboluri].functie = functie_curenta;
     SymbolTable[nrSimboluri].structura = structura_curenta;
     SymbolTable[nrSimboluri].param = param;
     nrSimboluri++;
 }
+
 void printTip(FILE *f, struct tip_t *tip) {
     if (tip != NULL) {
         fprintf(f, "%s", tip->nume);
@@ -514,6 +523,7 @@ void printTip(FILE *f, struct tip_t *tip) {
         fprintf(f, "void");
     }
 }
+
 
 void printTable(){
   fisier_tabela = fopen("symbol_table.txt", "w");
@@ -599,7 +609,18 @@ void funDefinita(char *nume, struct lista_param_t *arg) {
     corect = 0;
     printf("Funcția %s nu a fost definită\n", nume);
 }
-
+bool apelCorect(struct lista_param_t * arg, struct lista_param_t *param) {
+    while (param != NULL && arg != NULL) {
+        tipuriEgale(arg->param->tip, param->param->tip);
+        param = param->urmator;
+        arg = arg->urmator;
+    }
+    if (param != NULL || arg != NULL) {
+        corect = 0;
+        return 0;
+    }
+    return 1;
+}
 void structDefinita(char *nume) {
     if (strcmp(nume, "int") == 0 ||
         strcmp(nume, "float") == 0 ||
@@ -667,7 +688,8 @@ void tipuriEgale(struct tip_t *stanga, struct tip_t *dreapta) {
         if(strcmp(stanga->nume, dreapta->nume)){
             egale = 0;
         }
-    } else {
+    } 
+    else {
         egale = 0;
     }
     if (egale == 0) {
@@ -679,18 +701,6 @@ void tipuriEgale(struct tip_t *stanga, struct tip_t *dreapta) {
     }
 }
 
-bool apelCorect(struct lista_param_t * arg, struct lista_param_t *param) {
-    while (param != NULL && arg != NULL) {
-        tipuriEgale(arg->param->tip, param->param->tip);
-        param = param->urmator;
-        arg = arg->urmator;
-    }
-    if (param != NULL || arg != NULL) {
-        corect = 0;
-        return 0;
-    }
-    return 1;
-}
 struct tip_t * initTip_t(char * val)
 {
     struct tip_t* expr = (struct tip_t*)malloc(sizeof(struct tip_t));
