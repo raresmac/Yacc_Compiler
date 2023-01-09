@@ -9,7 +9,12 @@ extern int yylineno;
 char *functie_curenta = NULL;
 char *structura_curenta = NULL;
 int corect = 1;
-//ar trebui verificat ca o val const sa nu se schimbe ?
+/* TO DO
+1)adaugat si implementat SIMBOL_CONST pt 'variabile' const si defines
+2) setarea membrilor / parametrilor user_types si functii ca fiind parte din structura / functia respectiva
+3) implementare typeof() si eval() (eval doar pt int uri)
+4) printarea SIMBOL_FUNCTIE in fisier separat
+*/
 int yylex();
 int yyerror();
 
@@ -184,7 +189,7 @@ var_globale : declaratie ';'
             | var_globale definitie 
             | var_globale declaratie ';'
             ;
-definitie : DEFINE ID NR
+definitie : DEFINE ID NR //ar trebui adaugat ca constanta
           | DEFINE ID LIT
           ; 
 declaratii :  declaratie ';'{$$ = initTipListParam($1);}
@@ -216,7 +221,8 @@ declaratie : TIP ID ASSIGN LIT{
                               }
            | TIP ID '[' NR ']' ASSIGN '{' lista_lit '}'{
                               structDefinita($1->nume);
-                              tipuriEgale($4->tip, $1);
+                              struct tip_t *tip_expr=initTip_t("char");
+                              tipuriEgale(tip_expr, $1);
                               insertVarTable($2, $1);
                               $$ = initTipParam($1,$2);
                               }
@@ -325,46 +331,46 @@ param : TIP ID {
                    $$ = initTipParam($2,$3); 
                }
       ;
-list :  statement ';' 
-     | list statement ';'
+list :  statement
+     | list statement
      ;
 VAR : ID {
-         //de adaugat verificare daca e declarat si nu e vector
+         //de adaugat verificare daca nu e vector
          $$=initVar($1, -1);
          }
     | ID '[' NR ']'{
-         //de adaugat verificare daca e declarat si e vector
+         //de adaugat verificare daca e vector
          $$=initVar($1, $3->val);
          }
     ;
-statement : VAR NEWVAL VAR {
+statement : VAR NEWVAL VAR ';' {
                          varDefinita($1->nume);
                          struct tip_t *tip_var1 = tipVar($3);
                          struct tip_t *tip_var2 = tipVar($1);
                          tipuriEgale(tip_var1, tip_var2);
                          }
-          | VAR NEWVAL NR  {
+          | VAR NEWVAL NR ';'  {
                          varDefinita($1->nume);
                          struct tip_t *tip_var1 = $3->tip;
                          struct tip_t *tip_var2 = tipVar($1);
                          tipuriEgale(tip_var1, tip_var2);
                          }	 
-          | VAR NEWVAL lista_op{
+          | VAR NEWVAL lista_op ';'{
                               varDefinita($1->nume);
                               struct tip_t *tip_var = tipVar($1);
                               tipuriEgale($3, tip_var);
                               }	
-          | VAR NEWVAL '(' lista_op ')'{
+          | VAR NEWVAL '(' lista_op ')' ';' {
                                         varDefinita($1->nume);
                                         struct tip_t *tip_var = tipVar($1);
                                         tipuriEgale($4, tip_var);
                                         }	
-          | IF '(' lista_cond ')' '{' list '}'
-          | IF '(' lista_cond ')' statement
+          | IF '(' lista_cond ')' '{' list '}' 
+          | IF '(' lista_cond ')' statement ';'
           | FOR '(' statement ';' lista_cond ';' statement ')' '{' list '}'
-          | FOR '(' statement ';' lista_cond ';' statement ')' statement
+          | FOR '(' statement ';' lista_cond ';' statement ')' statement ';'
           | WHILE '(' lista_cond ')' '{' list '}'
-          | WHILE '(' lista_cond ')' statement
+          | WHILE '(' lista_cond ')' statement ';'
           | EVAL '(' VAR ')' ';'
           | EVAL '(' NR ')' ';' {if (corect){
                                                  printf("Rezultatul expresiei din eval este %f\n", $3->val);
@@ -419,9 +425,9 @@ arg : VAR { $$ = initTipParam(tipVar($1),$1->nume); }
 lista_cond : cond
            | '(' lista_cond ')' OP_C cond
            ;
-cond : VAR OP_C VAR
-     | VAR OP_C NR
-     | NR OP_C VAR
+cond : VAR OP_C VAR {varDefinita($1->nume); varDefinita($3->nume); tipuriEgale(tipVar($3), tipVar($1));}
+     | VAR OP_C NR {varDefinita($1->nume);tipuriEgale(tipVar($1), $3->tip);};
+     | NR OP_C VAR {varDefinita($3->nume);tipuriEgale(tipVar($3), $1->tip);};
      ;
 OP_C : AND
      | OR
