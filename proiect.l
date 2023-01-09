@@ -4,7 +4,6 @@
 %}
 %option noyywrap
 %%
-"//".*
 "Eval" {yylval.strval=strdup(yytext); return EVAL;}
 "TypeOf" {yylval.strval=strdup(yytext); return TYPEOF;}
 "nou tip"|"new type" {yylval.strval=strdup(yytext); return NEWTYPE;}
