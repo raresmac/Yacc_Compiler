@@ -254,31 +254,24 @@ declaratie : TIP ID ASSIGN LIT{
            
            | TIP ID '[' ']' ASSIGN '{' lista_nr '}'{
                               structDefinita($1->nume);
-                              struct tip_t *tip_expr=initTip_t("float");
-                              tipuriEgale(tip_expr,$1);
+                              tipuriEgale($7->tip,$1);
                               insertVarTable($2, $1);
                               $$ = initTipParam($1,$2);
                               }      
            | TIP ID '[' NR ']'{
                               structDefinita($1->nume);
-                              struct tip_t *tip_expr=initTip_t("int");
-                              tipuriEgale($4->tip,tip_expr);
                               insertVarTable($2, $1);
                               $$ = initTipParam($1,$2);
                               }
            | TIP ID '[' NR ']' ASSIGN '{' lista_nr '}'{
                               structDefinita($1->nume);
-                              struct tip_t *tip_expr=initTip_t("int");
-                              tipuriEgale($4->tip, tip_expr);
-                              tip_expr=initTip_t("float");
-                              tipuriEgale(tip_expr, $1);
+                              tipuriEgale($1, $8->tip);
                               insertVarTable($2, $1);
                               $$ = initTipParam($1,$2);
                               }
            | CONST TIP ID '[' ']' ASSIGN '{' lista_nr '}'{
                               structDefinita($2->nume);
-                              struct tip_t *tip_expr=initTip_t("float");
-                              tipuriEgale(tip_expr, $2);
+                              tipuriEgale($8->tip, $2);
                               insertVarTable($3, $2);
                               $$ = initTipParam($2,$3);
                               }
