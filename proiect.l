@@ -4,6 +4,7 @@
 %}
 %option noyywrap
 %%
+"//".*
 "Eval" {yylval.strval=strdup(yytext); return EVAL;}
 "TypeOf" {yylval.strval=strdup(yytext); return TYPEOF;}
 "nou tip"|"new type" {yylval.strval=strdup(yytext); return NEWTYPE;}
@@ -37,9 +38,9 @@
 "adevarat" {yylval.strval=strdup(yytext); return TRU;}
 "fals" {yylval.strval=strdup(yytext); return FALS;}
 [_a-zA-Z][_a-zA-Z0-9]* {yylval.strval=strdup(yytext); return ID;}
-[0-9]+|"-"[0-9]+ {yylval.vali=atoi(yytext); return NRI;}
-[0-9]+"."[0-9]+|"-"[0-9]+"."[0-9]+ {yylval.valf=atoi(yytext); return NRF;}
-"'"[a-zA-Z]"'" {yylval.strval=strdup(yytext); return LIT;}
+[0-9]+|\-[0-9]+ {yylval.vali=atoi(yytext); return NRI;}
+[0-9]+"."[0-9]+|\-[0-9]+"."[0-9]+ {yylval.valf=atoi(yytext); return NRF;}
+\'[0-9a-zA-Z_=+\[\]{};':",./<>?-]\' {yylval.strval=strdup(yytext); return LIT;}
 [ \t] ;
 \n {yylineno++;}
 . {return yytext[0];}
