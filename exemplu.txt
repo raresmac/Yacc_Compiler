@@ -9,5 +9,7 @@ termina
 main:
 incepe
     int y := 3 ;
+    int x;
+    y devine functieFaina(x);
     a1 devine -6;
 termina
