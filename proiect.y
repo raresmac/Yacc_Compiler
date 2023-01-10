@@ -12,12 +12,11 @@ int corect = 1;
 /* TO DO
 1) setarea membrilor / parametrilor user_types si functii ca fiind parte din structura / functia respectiva
 2) implementare typeof() si eval() (eval doar pt int uri)
-3) crearea fisierelor de printare, daca nu exista deja
 ^ plz u
 astea pot si eu:
-4) VAR: verificat ca id[nr]: id e vector | id: id nu e vector
-5) verificat daca folosim tip_t dimensiune / numar anywhere. Probabil ar trebui pt vectori? dar nu e implementat nimic
-6) la declarare vector, de verificat ca [nr] = lungimea listei (unde e cazul)
+3) VAR: verificat ca id[nr]: id e vector | id: id nu e vector
+4) verificat daca folosim tip_t dimensiune / numar anywhere. Probabil ar trebui pt vectori? dar nu e implementat nimic
+5) la declarare vector, de verificat ca [nr] = lungimea listei (unde e cazul)
 
 mica observatie: nu verificam daca functiile returneaza their return type, si nici nu permitam 'return' la functii. In enunt nu zice ca ar trebui dar e ciudat
 */
