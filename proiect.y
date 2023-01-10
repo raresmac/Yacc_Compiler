@@ -89,6 +89,7 @@ struct lista_param_t *initTipListParam(struct param_t* val);
 bool apelCorect(struct lista_param_t *arg, struct lista_param_t *param);
 void insertConstTable(char *nume, struct tip_t *tip);
 void insertVarTable(char *nume, struct tip_t *tip);
+void insertVarListTable(struct lista_param_t *var);
 void insertFuncTable(char *nume, struct tip_t *ret, struct lista_param_t *param);
 void insertStructTable(char *nume, struct lista_param_t *param);
 void printTable();
@@ -332,9 +333,11 @@ functii : functie
         ;
 functie : TIP ID '(' lista_param ')' BGIN list END
                 {
+                    printf("Am ajuns aici\n");
                     insertFuncTable($2, $1, $4);
-                    functie_curenta = $2; //not sure
-                    //de schimbat SymbolTable[lista_param].functie
+                    functie_curenta = $2; 
+                    insertVarListTable($4); //tot da erori, ca si cum parametrii cu ar fi declarati, deoarece analizeaza list inaintea acestei acolade
+                    //de schimbat SymbolTable[declaratii din list].functie
                     functie_curenta = NULL;
                 }
         ;
@@ -514,6 +517,13 @@ void checkTable(char* nume){
         }
     }
 }
+void insertVarListTable(struct lista_param_t *var){
+    while(var!=NULL)
+    {
+        insertVarTable(var->param->nume,var->param->tip);
+        var=var->urmator;
+    }
+}
 void insertConstTable(char *nume, struct tip_t *tip){
     checkTable(nume);
     
@@ -602,7 +612,6 @@ void printTable(){
                   fprintf(fisier_functii, ", ");
           }
           fprintf(fisier_functii, ")\t");
-          fprintf(fisier_functii, "func\t");
           fprintf(fisier_functii, "\n");
       } 
 
