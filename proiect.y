@@ -403,13 +403,13 @@ NEWVAL : ASSIGN
        | ADD
        | DEDUCT
        ;
-lista_op : VAR operatie { tipuriEgale($2, tipVar($1)); $$=$2;}
+lista_op : VAR operatie { varDefinita($1->nume); tipuriEgale($2, tipVar($1)); $$=$2;}
          | NR operatie {tipuriEgale($2, initTip_t("float")); $$=$2;}
          | apel //default return ok
          | lista_op operatie {tipuriEgale($1,$2);}
          | '(' lista_op ')' operatie {tipuriEgale($2,$4); $$=$2;}
          ;
-operatie : OP VAR {;$$=tipVar($2);}
+operatie : OP VAR {varDefinita($2->nume);$$=tipVar($2);}
          | OP NR {$$=$2->tip;}
          | OP apel {$$=$2;}
          ;
