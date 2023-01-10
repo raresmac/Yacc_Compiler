@@ -1,17 +1,13 @@
 int a1;
-DEFINESTE b1 3;
-int incrementare(int a1)
-BGIN
-    a1 devine a1 plus 1;
-END
-MAIN
-
-BGIN
-    a1 devine 6;
-    daca(b1 NU E 3){
-        a1 devine 5;
-    }
-    daca(b1 NU E 4){
-        a1 devine a1 minus 3;
-    }
-END
+char c := 'a';
+int v [3] := { 1 , 2 , 3 } ;
+int functieFaina(int x)
+incepe
+    for (int i:=1;| i<x | i:=i+1; )
+        x := x - 1;
+termina
+main:
+incepe
+    int y := 3 ;
+    a1 devine -6;
+termina
