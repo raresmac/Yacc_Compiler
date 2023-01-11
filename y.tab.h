@@ -63,14 +63,14 @@ extern int yydebug;
     STRING = 264,                  /* STRING  */
     NEWTYPE = 265,                 /* NEWTYPE  */
     IF = 266,                      /* IF  */
-    WHILE = 267,                   /* WHILE  */
-    FOR = 268,                     /* FOR  */
-    BGIN = 269,                    /* BGIN  */
-    END = 270,                     /* END  */
-    DEFINE = 271,                  /* DEFINE  */
-    CONST = 272,                   /* CONST  */
-    TYPEOF = 273,                  /* TYPEOF  */
-    NR = 274,                      /* NR  */
+    ELSE = 267,                    /* ELSE  */
+    WHILE = 268,                   /* WHILE  */
+    FOR = 269,                     /* FOR  */
+    BGIN = 270,                    /* BGIN  */
+    END = 271,                     /* END  */
+    DEFINE = 272,                  /* DEFINE  */
+    CONST = 273,                   /* CONST  */
+    TYPEOF = 274,                  /* TYPEOF  */
     GR = 275,                      /* GR  */
     LW = 276,                      /* LW  */
     ASSIGN = 277,                  /* ASSIGN  */
@@ -86,7 +86,13 @@ extern int yydebug;
     NOT = 287,                     /* NOT  */
     XOR = 288,                     /* XOR  */
     EVAL = 289,                    /* EVAL  */
-    MAIN = 290                     /* MAIN  */
+    MAIN = 290,                    /* MAIN  */
+    TRU = 291,                     /* TRU  */
+    FALS = 292,                    /* FALS  */
+    RET = 293,                     /* RET  */
+    UTYPE = 294,                   /* UTYPE  */
+    NRI = 295,                     /* NRI  */
+    NRF = 296                      /* NRF  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -104,14 +110,14 @@ extern int yydebug;
 #define STRING 264
 #define NEWTYPE 265
 #define IF 266
-#define WHILE 267
-#define FOR 268
-#define BGIN 269
-#define END 270
-#define DEFINE 271
-#define CONST 272
-#define TYPEOF 273
-#define NR 274
+#define ELSE 267
+#define WHILE 268
+#define FOR 269
+#define BGIN 270
+#define END 271
+#define DEFINE 272
+#define CONST 273
+#define TYPEOF 274
 #define GR 275
 #define LW 276
 #define ASSIGN 277
@@ -128,26 +134,31 @@ extern int yydebug;
 #define XOR 288
 #define EVAL 289
 #define MAIN 290
+#define TRU 291
+#define FALS 292
+#define RET 293
+#define UTYPE 294
+#define NRI 295
+#define NRF 296
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 141 "proiect.y"
+#line 105 "proiect.y"
 
-    int val;
+    struct valnr_t *valnr;
+    int vali;
+    float valf;
     char *strval;
-    char charval;
-    struct info *inf;
     struct lista_nr_t *lista_nr_t;
     struct lista_lit_t *lista_lit_t;
     struct lista_param_t *lista_param_t;
-    struct param *param;
-    struct expresie *expresie;
+    struct param_t *param_t;
     struct var *v; 
     struct tip_t* tip;
 
-#line 151 "y.tab.h"
+#line 162 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

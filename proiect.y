@@ -16,6 +16,7 @@ astea pot si eu:
 2) VAR: verificat ca id[nr]: id e vector | id: id nu e vector
 3) verificat daca folosim tip_t dimensiune / numar anywhere. Probabil ar trebui pt vectori? dar nu e implementat nimic
 4) la declarare vector, de verificat ca [nr] = lungimea listei (unde e cazul)
+5) sa se inchida programul automat daca gaseste o linie gresita (nu am testat)
 OBS:
 -lista_op si lista_cond sa permita paranteze cum trebuie..nu am testat prea mult
 -la final, sa stergem ce nu e folositor, daca e cazul
@@ -43,8 +44,8 @@ struct lista_param_t{
 };
 struct tip_t {
     char *nume;
-    int dimensiune; //?
-    int numar[1024]; //?
+    int dimensiune; //nr de elemente daca e vector
+    int numar[1024]; //elementele din vector
 };
 struct valnr_t {
     struct tip_t *tip;
@@ -52,7 +53,7 @@ struct valnr_t {
 };
 struct param_t
 {
-        struct tip_t *tip;
+    struct tip_t *tip;
 	char *nume;
 	bool cons;
 };
@@ -221,18 +222,21 @@ declaratii :  declaratie ';'{$$ = initTipListParam($1);}
                              }
 	   ;
 declaratie : TIP ID ASSIGN LIT{
+                              //$1->dimensiune = 1;
                               structDefinita($1->nume);
                               struct tip_t *tip_expr=initTip_t("char");
                               tipuriEgale(tip_expr, $1);
                               $$ = initTipParam($1,$2,0);
                               }
            | CONST TIP ID ASSIGN LIT{
-                              structDefinita($2->nume);
+                              structDefinita($2->nume);                              
+                              //$1->dimensiune = 1;
                               struct tip_t *tip_expr=initTip_t("char");
                               tipuriEgale(tip_expr, $2);
                               $$ = initTipParam($2,$3,1);
                               }
            | TIP ID '[' ']' ASSIGN '{' lista_lit '}'{
+                              //$1->dimensiune = 1;
                               structDefinita($1->nume);
                               struct tip_t *tip_expr=initTip_t("char");
                               tipuriEgale(tip_expr, $1);
@@ -245,12 +249,14 @@ declaratie : TIP ID ASSIGN LIT{
                               $$ = initTipParam($1,$2,0);
                               }
            | TIP ID '[' NR ']' ASSIGN '{' lista_lit '}'{
+                              //$1->dimensiune = $4;
                               structDefinita($1->nume);
                               struct tip_t *tip_expr=initTip_t("char");
                               tipuriEgale(tip_expr, $1);
                               $$ = initTipParam($1,$2,0);
                               }
            | CONST TIP ID '[' NR ']' ASSIGN '{' lista_lit '}'{
+                              //$2->dimensiune = $5;
                               structDefinita($2->nume);
                               struct tip_t *tip_expr=initTip_t("char");
                               tipuriEgale(tip_expr, $2);
@@ -291,11 +297,15 @@ declaratie : TIP ID ASSIGN LIT{
            | TIP ID '[' NR ']'{
                               structDefinita($1->nume);
                               $$ = initTipParam($1,$2,0);
+                              //$$->numar[$$->tip->dimensiune] = $4; 
+                              //$$->tip->dimensiune += 1;
                               }
            | TIP ID '[' NR ']' ASSIGN '{' lista_nr '}'{
                               structDefinita($1->nume);
                               tipuriEgale($1, $8->tip);
                               $$ = initTipParam($1,$2,0);
+                              //$$->numar[$$->tip->dimensiune] = $4; 
+                              //$$->tip->dimensiune += 1;
                               }
            | CONST TIP ID '[' ']' ASSIGN '{' lista_nr '}'{
                               structDefinita($2->nume);
@@ -306,6 +316,8 @@ declaratie : TIP ID ASSIGN LIT{
                               structDefinita($2->nume);
                               tipuriEgale($9->tip, $2);
                               $$ = initTipParam($2,$3,1);
+                              //$$->numar[$$->tip->dimensiune] = $5; 
+                              //$$->tip->dimensiune += 1;
                               }
            | TIP ID ASSIGN BVAL{
                               structDefinita($1->nume);
@@ -368,31 +380,55 @@ list :  statement
      | list statement {if($1 && $2)tipuriEgale($1,$2); if($1) $$=$1; else if($2) $$=$2;}
      ;
 VAR : ID {
-         //de adaugat verificare daca nu e vector
+         /*if($1->dimensiune > 1){
+            printf("Incorect semantic!");
+            exit(0);
+         }*/
+         //de adaugat verificare daca nu e vector (nu am testat)
          $$=initVar($1, -1, 0);
          }
     | ID '[' NR ']'{
-         //de adaugat verificare daca e vector
+         //de adaugat verificare daca e vector (nu am testat)
+         /*if($1->dimensiune <= 1){
+            printf("Incorect semantic!");
+            exit(0);
+         }*/
          $$=initVar($1, $3->val, 0);
          }
     | ID '[' VAR ']'{
-         //de adaugat verificare daca e vector
+         //de adaugat verificare daca e vector (nu am testat)
+         /*if($1->dimensiune > 1){
+            printf("Incorect semantic!");
+            exit(0);
+         }*/
          struct tip_t *tip_expr=initTip_t("int");
          tipuriEgale(tip_expr, tipVar($3));
          $$=initVar($1, 1, 0);
          }
     | ID '.' VAR {
-          //de adaugat verificare daca nu e vector
+         //de adaugat verificare daca nu e vector (nu am testat)
+         /*if($1->dimensiune > 1){
+            printf("Incorect semantic!");
+            exit(0);
+         }*/
           isStruct($1,$3);
           $$=initVar($1, -1, tipVar($3));
          }
     | ID '[' NR ']' '.' VAR{
-         //de adaugat verificare daca e vector
+         //de adaugat verificare daca e vector (nu am testat)
+         /*if($1->dimensiune <= 1){
+            printf("Incorect semantic!");
+            exit(0);
+         }*/
          isStruct($1,$6);
          $$=initVar($1, $3->val,tipVar($6));
          }
     | ID '[' VAR ']' '.' VAR{
-         //de adaugat verificare daca e vector
+         //de adaugat verificare daca e vector (nu am testat)
+         /*if($1->dimensiune > 1){
+            printf("Incorect semantic!");
+            exit(0);
+         }*/
          isStruct($1,$6);
          struct tip_t *tip_expr=initTip_t("int");
          tipuriEgale(tip_expr, tipVar($3));
@@ -451,9 +487,14 @@ statement : VAR NEWVAL VAR ';' {
                                              }
                                              else {printf("Valorile nu sunt de tip int\n");} $$=NULL;}
           | EVAL '(' lista_op ')' ';' {$$=NULL;}
-          | TYPEOF '(' VAR ')' ';' {$$=NULL;}
-          | TYPEOF '(' NR ')' ';' {$$=NULL;}
-          | TYPEOF '(' LIT ')' ';' {$$=NULL;}
+          | TYPEOF '(' VAR ')' ';'  {
+                                    $$=tipVar($3);
+                                    printf("Tipul variabilei este %s",tipVar($3)->nume);
+                                    }
+          | TYPEOF '(' NR ')' ';' { //nu inteleg la ce faci typeof
+                                  }
+          | TYPEOF '(' LIT ')' ';' { //identic ca mai sus
+                                    }
           | RET NR ';' { $$=$2->tip; }
           | RET LIT ';'{ struct tip_t *tip_expr=initTip_t("char"); $$=tip_expr; }
           | RET BVAL ';' { struct tip_t *tip_expr=initTip_t("bool"); $$=tip_expr; }
@@ -491,7 +532,11 @@ lista_arg : arg {$$ = initTipListParam($1);}
                                $1->urmator=initTipListParam($3);
                              }
           ;
-arg : VAR { varDefinita($1->nume); $$ = initTipParam(tipVar($1),$1->nume,0); } //to check is VAR const
+arg : VAR { 
+            varNotConst($1->nume);
+            varDefinita($1->nume); 
+            $$ = initTipParam(tipVar($1),$1->nume,0);
+            }
     | VAR NEWVAL VAR {
                    varNotConst($1->nume);
                    varDefinita($3->nume);
@@ -569,6 +614,7 @@ void checkTable(char* nume){
                 printf("din structura %s ", structura_curenta);
             printf("deja există\n");
             corect = 0;
+            exit(0);
             break;
         }
     }
@@ -712,6 +758,7 @@ bool varDefinita(char *nume) {
     }
     corect = 0;
     printf("Variabila %s nu a fost definită\n", nume);
+    exit(0);
     return 0;
 }
 
@@ -730,6 +777,7 @@ void funDefinita(char *nume, struct lista_param_t *arg) {
     }
     corect = 0;
     printf("Funcția %s nu a fost definită\n", nume);
+    exit(0);
 }
 bool apelCorect(struct lista_param_t * arg, struct lista_param_t *param) {
     while (param != NULL && arg != NULL) {
@@ -739,6 +787,7 @@ bool apelCorect(struct lista_param_t * arg, struct lista_param_t *param) {
     }
     if (param != NULL || arg != NULL) {
         corect = 0;
+        exit(0);
         return 0;
     }
     return 1;
@@ -757,6 +806,7 @@ bool structDefinita(char *nume) {
     }
     corect = 0;
     printf("Structura %s nu a fost definită\n", nume);
+    exit(0);
     return 0;
 }
 
@@ -823,13 +873,16 @@ void tipuriEgale(struct tip_t *stanga, struct tip_t *dreapta) {
         printf(" nu este compatibil cu ");
         printTip(stdout, dreapta);
         printf("\n");
+        exit(0);
     }
 }
 void varNotConst (char *nume){
+    corect = 0;
     if(varDefinita(nume)==0 && corect)
     {
         corect=0;
         printf("Valoarea lui %s nu poate fi schimbata\n", nume);
+        exit(0);
     } 
 }
 void isStruct(char * nume, struct var* comp){
@@ -865,12 +918,14 @@ void isStruct(char * nume, struct var* comp){
         {
             corect=0;
             printf("Variabila %s nu are membrii. Nu e usertype\n", nume);
+            exit(0);
             return;
         }
         else
         {
             corect=0;
             printf("%s nu e usertype\n", nume);
+            exit(0);
             return;
         }
     }

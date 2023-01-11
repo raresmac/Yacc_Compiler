@@ -79,53 +79,26 @@ extern int yylineno;
 char *functie_curenta = NULL;
 char *structura_curenta = NULL;
 int corect = 1;
-
+/* TO DO
+1) implementare typeof() si eval() (eval doar pt int uri)
+^ plz u
+astea pot si eu:
+2) VAR: verificat ca id[nr]: id e vector | id: id nu e vector
+3) verificat daca folosim tip_t dimensiune / numar anywhere. Probabil ar trebui pt vectori? dar nu e implementat nimic
+4) la declarare vector, de verificat ca [nr] = lungimea listei (unde e cazul)
+5) sa se inchida programul automat daca gaseste o linie gresita (nu am testat)
+OBS:
+-lista_op si lista_cond sa permita paranteze cum trebuie..nu am testat prea mult
+-la final, sa stergem ce nu e folositor, daca e cazul
+*/
 int yylex();
 int yyerror();
 
 FILE *fisier_tabela;
-
-struct expresie_str {
-    char *val;
-    struct expresie_str *str1, *str2;
-    struct expresie_apel *apel;
-    struct var *var;
-};
-
-struct expresie_bool {
-    bool val;
-    struct expresie_num *expr_comp_num1, *expr_comp_num2;
-    struct expresie_str *expr_comp_str1, *expr_comp_str2;
-    struct expresie_bool *expr_bool1, *expr_bool2;
-    struct expresie_apel *apel;
-    struct var *var;
-};
-
-struct expresie_num {
-    float val;
-    struct expresie_num *expr1, *expr2;
-    struct expresie_apel *apel;
-    struct var *var;
-};
-
-struct expresie {
-    enum {
-        EXPRESIE_NUM,
-        EXPRESIE_BOOL,
-        EXPRESIE_STR,
-        EXPRESIE_NEW,
-        EXPRESIE_APEL,
-        EXPRESIE_VAR
-    } tip_expr;
-    struct expresie_num *num;
-    struct expresie_bool *boolean;
-    struct expresie_str *str;
-    char *new;
-    struct expresie_apel *apel;
-    struct var *var;
-};
+FILE *fisier_functii;
 
 struct lista_nr_t{
+    struct tip_t *tip;
     int nr;
     struct lista_nr_t *urmator;
 };
@@ -135,79 +108,71 @@ struct lista_lit_t{
     struct lista_lit_t *urmator;
 };
 
-struct lista_expresii {
-    struct expresie *expr;
-    struct lista_expresii *urmator;
-};
-
-struct expresie_apel {
-    char *fun;
-    struct lista_expresii *arg;
-};
-
 struct lista_param_t{
-    struct tip_t *tip;
-    char *nume;
+    struct param_t * param;
     struct lista_param_t *urmator;
 };
-
 struct tip_t {
     char *nume;
-    int dimensiune;
-    int numar[1024];
+    int dimensiune; //nr de elemente daca e vector
+    int numar[1024]; //elementele din vector
 };
-
-struct info
-{
-    int intval;
-    char strval[100];
-    float floatval;
-    char charval;
-    int type;
-    bool boolval;
+struct valnr_t {
+    struct tip_t *tip;
+    float val;
 };
-
-struct param
+struct param_t
 {
-	char denumire[50];
-	struct info inf;
+    struct tip_t *tip;
+	char *nume;
+	bool cons;
 };
 
 struct var{
 	int index;
 	char *nume;
+	struct tip_t *param;
 };
 
 struct simbol{
     enum{
         SIMBOL_VARIABILA,
         SIMBOL_FUNCTIE,
-        SIMBOL_STRUCTURA
+        SIMBOL_STRUCTURA,
+        SIMBOL_CONST
     }tip_simbol;
     char *nume;
     char *functie;
     char *structura;
     struct tip_t *tip;
     struct lista_param_t *param;
-    struct expresie *init;
 }SymbolTable[1024];
 
 int nrSimboluri = 0;
+struct valnr_t *InitNr(char * tip, float val);
 struct tip_t *initTip_t(char * val);
-struct var *initVar(char * val, int index);
+struct var *initVar(char * val, int index, struct tip_t *param);
+struct param_t *initTipParam(struct tip_t *tip, char *valm, bool cons);
+struct lista_nr_t *initTipListNr(struct valnr_t* val);
+struct lista_lit_t *initTipListLit(char* val);
+struct lista_param_t *initTipListParam(struct param_t* val);
+bool apelCorect(struct lista_param_t *arg, struct lista_param_t *param);
+void insertConstTable(char *nume, struct tip_t *tip);
 void insertVarTable(char *nume, struct tip_t *tip);
+void insertVarListTable(struct lista_param_t *var);
 void insertFuncTable(char *nume, struct tip_t *ret, struct lista_param_t *param);
+void insertStructTable(char *nume, struct lista_param_t *param);
 void printTable();
-void varDefinita(char *nume);
-void funDefinita(char *nume);
-void structDefinita(char *nume);
+void isStruct(char * nume, struct var* comp);
+bool varDefinita(char *nume);
+void funDefinita(char *nume, struct lista_param_t *arg);
+void varNotConst (char *nume);
+bool structDefinita(char *nume);
 struct tip_t *tipVar(struct var *v);
 struct tip_t *tipRetFun(char *nume);
-struct tip_t *tipExpr(struct expresie *expr);
 void tipuriEgale(struct tip_t *stanga, struct tip_t *dreapta);
-void apelCorect(struct expresie_apel *apel);
 
-#line 211 "y.tab.c"
+#line 176 "y.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -260,14 +225,14 @@ extern int yydebug;
     STRING = 264,                  /* STRING  */
     NEWTYPE = 265,                 /* NEWTYPE  */
     IF = 266,                      /* IF  */
-    WHILE = 267,                   /* WHILE  */
-    FOR = 268,                     /* FOR  */
-    BGIN = 269,                    /* BGIN  */
-    END = 270,                     /* END  */
-    DEFINE = 271,                  /* DEFINE  */
-    CONST = 272,                   /* CONST  */
-    TYPEOF = 273,                  /* TYPEOF  */
-    NR = 274,                      /* NR  */
+    ELSE = 267,                    /* ELSE  */
+    WHILE = 268,                   /* WHILE  */
+    FOR = 269,                     /* FOR  */
+    BGIN = 270,                    /* BGIN  */
+    END = 271,                     /* END  */
+    DEFINE = 272,                  /* DEFINE  */
+    CONST = 273,                   /* CONST  */
+    TYPEOF = 274,                  /* TYPEOF  */
     GR = 275,                      /* GR  */
     LW = 276,                      /* LW  */
     ASSIGN = 277,                  /* ASSIGN  */
@@ -283,7 +248,13 @@ extern int yydebug;
     NOT = 287,                     /* NOT  */
     XOR = 288,                     /* XOR  */
     EVAL = 289,                    /* EVAL  */
-    MAIN = 290                     /* MAIN  */
+    MAIN = 290,                    /* MAIN  */
+    TRU = 291,                     /* TRU  */
+    FALS = 292,                    /* FALS  */
+    RET = 293,                     /* RET  */
+    UTYPE = 294,                   /* UTYPE  */
+    NRI = 295,                     /* NRI  */
+    NRF = 296                      /* NRF  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -301,14 +272,14 @@ extern int yydebug;
 #define STRING 264
 #define NEWTYPE 265
 #define IF 266
-#define WHILE 267
-#define FOR 268
-#define BGIN 269
-#define END 270
-#define DEFINE 271
-#define CONST 272
-#define TYPEOF 273
-#define NR 274
+#define ELSE 267
+#define WHILE 268
+#define FOR 269
+#define BGIN 270
+#define END 271
+#define DEFINE 272
+#define CONST 273
+#define TYPEOF 274
 #define GR 275
 #define LW 276
 #define ASSIGN 277
@@ -325,26 +296,31 @@ extern int yydebug;
 #define XOR 288
 #define EVAL 289
 #define MAIN 290
+#define TRU 291
+#define FALS 292
+#define RET 293
+#define UTYPE 294
+#define NRI 295
+#define NRF 296
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 141 "proiect.y"
+#line 105 "proiect.y"
 
-    int val;
+    struct valnr_t *valnr;
+    int vali;
+    float valf;
     char *strval;
-    char charval;
-    struct info *inf;
     struct lista_nr_t *lista_nr_t;
     struct lista_lit_t *lista_lit_t;
     struct lista_param_t *lista_param_t;
-    struct param *param;
-    struct expresie *expresie;
+    struct param_t *param_t;
     struct var *v; 
     struct tip_t* tip;
 
-#line 348 "y.tab.c"
+#line 324 "y.tab.c"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -376,14 +352,14 @@ enum yysymbol_kind_t
   YYSYMBOL_STRING = 9,                     /* STRING  */
   YYSYMBOL_NEWTYPE = 10,                   /* NEWTYPE  */
   YYSYMBOL_IF = 11,                        /* IF  */
-  YYSYMBOL_WHILE = 12,                     /* WHILE  */
-  YYSYMBOL_FOR = 13,                       /* FOR  */
-  YYSYMBOL_BGIN = 14,                      /* BGIN  */
-  YYSYMBOL_END = 15,                       /* END  */
-  YYSYMBOL_DEFINE = 16,                    /* DEFINE  */
-  YYSYMBOL_CONST = 17,                     /* CONST  */
-  YYSYMBOL_TYPEOF = 18,                    /* TYPEOF  */
-  YYSYMBOL_NR = 19,                        /* NR  */
+  YYSYMBOL_ELSE = 12,                      /* ELSE  */
+  YYSYMBOL_WHILE = 13,                     /* WHILE  */
+  YYSYMBOL_FOR = 14,                       /* FOR  */
+  YYSYMBOL_BGIN = 15,                      /* BGIN  */
+  YYSYMBOL_END = 16,                       /* END  */
+  YYSYMBOL_DEFINE = 17,                    /* DEFINE  */
+  YYSYMBOL_CONST = 18,                     /* CONST  */
+  YYSYMBOL_TYPEOF = 19,                    /* TYPEOF  */
   YYSYMBOL_GR = 20,                        /* GR  */
   YYSYMBOL_LW = 21,                        /* LW  */
   YYSYMBOL_ASSIGN = 22,                    /* ASSIGN  */
@@ -400,41 +376,54 @@ enum yysymbol_kind_t
   YYSYMBOL_XOR = 33,                       /* XOR  */
   YYSYMBOL_EVAL = 34,                      /* EVAL  */
   YYSYMBOL_MAIN = 35,                      /* MAIN  */
-  YYSYMBOL_36_ = 36,                       /* ';'  */
-  YYSYMBOL_37_ = 37,                       /* '['  */
-  YYSYMBOL_38_ = 38,                       /* ']'  */
-  YYSYMBOL_39_ = 39,                       /* '{'  */
-  YYSYMBOL_40_ = 40,                       /* '}'  */
-  YYSYMBOL_41_ = 41,                       /* '('  */
-  YYSYMBOL_42_ = 42,                       /* ')'  */
-  YYSYMBOL_43_ = 43,                       /* ','  */
-  YYSYMBOL_YYACCEPT = 44,                  /* $accept  */
-  YYSYMBOL_progr = 45,                     /* progr  */
-  YYSYMBOL_var_globale = 46,               /* var_globale  */
-  YYSYMBOL_definitii = 47,                 /* definitii  */
-  YYSYMBOL_definitie = 48,                 /* definitie  */
-  YYSYMBOL_declaratii = 49,                /* declaratii  */
-  YYSYMBOL_declaratie = 50,                /* declaratie  */
-  YYSYMBOL_TIP = 51,                       /* TIP  */
-  YYSYMBOL_user_types = 52,                /* user_types  */
-  YYSYMBOL_user_type = 53,                 /* user_type  */
-  YYSYMBOL_functii = 54,                   /* functii  */
-  YYSYMBOL_functie = 55,                   /* functie  */
-  YYSYMBOL_lista_param = 56,               /* lista_param  */
-  YYSYMBOL_param = 57,                     /* param  */
-  YYSYMBOL_list = 58,                      /* list  */
-  YYSYMBOL_VAR = 59,                       /* VAR  */
-  YYSYMBOL_statement = 60,                 /* statement  */
-  YYSYMBOL_NEWVAL = 61,                    /* NEWVAL  */
-  YYSYMBOL_op_list = 62,                   /* op_list  */
-  YYSYMBOL_operation = 63,                 /* operation  */
-  YYSYMBOL_OP = 64,                        /* OP  */
-  YYSYMBOL_lista_cond = 65,                /* lista_cond  */
-  YYSYMBOL_cond = 66,                      /* cond  */
-  YYSYMBOL_OP_C = 67,                      /* OP_C  */
-  YYSYMBOL_lista_nr = 68,                  /* lista_nr  */
-  YYSYMBOL_lista_lit = 69,                 /* lista_lit  */
-  YYSYMBOL_bloc = 70                       /* bloc  */
+  YYSYMBOL_TRU = 36,                       /* TRU  */
+  YYSYMBOL_FALS = 37,                      /* FALS  */
+  YYSYMBOL_RET = 38,                       /* RET  */
+  YYSYMBOL_UTYPE = 39,                     /* UTYPE  */
+  YYSYMBOL_NRI = 40,                       /* NRI  */
+  YYSYMBOL_NRF = 41,                       /* NRF  */
+  YYSYMBOL_42_ = 42,                       /* ';'  */
+  YYSYMBOL_43_ = 43,                       /* '['  */
+  YYSYMBOL_44_ = 44,                       /* ']'  */
+  YYSYMBOL_45_ = 45,                       /* '{'  */
+  YYSYMBOL_46_ = 46,                       /* '}'  */
+  YYSYMBOL_47_ = 47,                       /* '('  */
+  YYSYMBOL_48_ = 48,                       /* ')'  */
+  YYSYMBOL_49_ = 49,                       /* ','  */
+  YYSYMBOL_50_ = 50,                       /* '.'  */
+  YYSYMBOL_51_ = 51,                       /* '|'  */
+  YYSYMBOL_YYACCEPT = 52,                  /* $accept  */
+  YYSYMBOL_progr = 53,                     /* progr  */
+  YYSYMBOL_var_globale = 54,               /* var_globale  */
+  YYSYMBOL_definitie = 55,                 /* definitie  */
+  YYSYMBOL_declaratii = 56,                /* declaratii  */
+  YYSYMBOL_declaratie = 57,                /* declaratie  */
+  YYSYMBOL_BVAL = 58,                      /* BVAL  */
+  YYSYMBOL_TIP = 59,                       /* TIP  */
+  YYSYMBOL_user_types = 60,                /* user_types  */
+  YYSYMBOL_user_type = 61,                 /* user_type  */
+  YYSYMBOL_functii = 62,                   /* functii  */
+  YYSYMBOL_functie = 63,                   /* functie  */
+  YYSYMBOL_declaratie_fct = 64,            /* declaratie_fct  */
+  YYSYMBOL_lista_param = 65,               /* lista_param  */
+  YYSYMBOL_param = 66,                     /* param  */
+  YYSYMBOL_list = 67,                      /* list  */
+  YYSYMBOL_VAR = 68,                       /* VAR  */
+  YYSYMBOL_statement = 69,                 /* statement  */
+  YYSYMBOL_NEWVAL = 70,                    /* NEWVAL  */
+  YYSYMBOL_lista_op = 71,                  /* lista_op  */
+  YYSYMBOL_operatie = 72,                  /* operatie  */
+  YYSYMBOL_OP = 73,                        /* OP  */
+  YYSYMBOL_apel = 74,                      /* apel  */
+  YYSYMBOL_lista_arg = 75,                 /* lista_arg  */
+  YYSYMBOL_arg = 76,                       /* arg  */
+  YYSYMBOL_lista_cond = 77,                /* lista_cond  */
+  YYSYMBOL_cond = 78,                      /* cond  */
+  YYSYMBOL_OP_C = 79,                      /* OP_C  */
+  YYSYMBOL_NR = 80,                        /* NR  */
+  YYSYMBOL_lista_nr = 81,                  /* lista_nr  */
+  YYSYMBOL_lista_lit = 82,                 /* lista_lit  */
+  YYSYMBOL_bloc = 83                       /* bloc  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -551,7 +540,7 @@ typedef int yytype_uint16;
 
 
 /* Stored state numbers (used for stacks). */
-typedef yytype_uint8 yy_state_t;
+typedef yytype_int16 yy_state_t;
 
 /* State numbers in computations.  */
 typedef int yy_state_fast_t;
@@ -760,21 +749,21 @@ union yyalloc
 #endif /* !YYCOPY_NEEDED */
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  30
+#define YYFINAL  27
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   371
+#define YYLAST   716
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  44
+#define YYNTOKENS  52
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  27
+#define YYNNTS  32
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  97
+#define YYNRULES  134
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  248
+#define YYNSTATES  292
 
 /* YYMAXUTOK -- Last valid token kind.  */
-#define YYMAXUTOK   290
+#define YYMAXUTOK   296
 
 
 /* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
@@ -792,15 +781,15 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-      41,    42,     2,     2,    43,     2,     2,     2,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,     2,    36,
+      47,    48,     2,     2,    49,     2,    50,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,    42,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,    37,     2,    38,     2,     2,     2,     2,     2,     2,
+       2,    43,     2,    44,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,    39,     2,    40,     2,     2,     2,     2,
+       2,     2,     2,    45,    51,    46,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -817,23 +806,27 @@ static const yytype_int8 yytranslate[] =
        5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
       15,    16,    17,    18,    19,    20,    21,    22,    23,    24,
       25,    26,    27,    28,    29,    30,    31,    32,    33,    34,
-      35
+      35,    36,    37,    38,    39,    40,    41
 };
 
 #if YYDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,   169,   169,   177,   185,   193,   201,   209,   217,   225,
-     234,   235,   236,   238,   239,   241,   242,   244,   245,   247,
-     251,   257,   263,   269,   275,   281,   285,   291,   297,   303,
-     309,   316,   317,   318,   319,   320,   322,   323,   325,   327,
-     328,   330,   336,   337,   340,   341,   342,   343,   344,   346,
-     347,   349,   353,   358,   364,   365,   371,   377,   378,   379,
-     380,   381,   382,   383,   384,   388,   389,   390,   391,   393,
-     394,   395,   397,   398,   400,   401,   402,   404,   405,   406,
-     407,   409,   410,   412,   413,   414,   416,   417,   418,   419,
-     420,   421,   422,   424,   425,   427,   428,   430
+       0,   133,   133,   141,   149,   157,   165,   173,   181,   189,
+     198,   204,   205,   206,   213,   214,   216,   217,   224,   231,
+     238,   245,   251,   258,   265,   271,   277,   281,   286,   292,
+     297,   303,   310,   315,   322,   328,   335,   336,   338,   339,
+     340,   341,   342,   343,   345,   346,   348,   355,   356,   358,
+     360,   368,   369,   376,   377,   379,   380,   382,   390,   398,
+     408,   417,   426,   438,   444,   449,   454,   459,   465,   471,
+     478,   479,   480,   481,   482,   483,   484,   485,   489,   490,
+     494,   496,   498,   499,   500,   501,   503,   504,   505,   507,
+     508,   509,   510,   511,   513,   514,   515,   517,   518,   519,
+     520,   522,   527,   528,   535,   540,   546,   551,   553,   554,
+     555,   556,   557,   558,   559,   561,   562,   563,   564,   566,
+     567,   568,   569,   570,   571,   572,   574,   575,   576,   577,
+     579,   580,   586,   587,   592
 };
 #endif
 
@@ -850,15 +843,17 @@ static const char *yysymbol_name (yysymbol_kind_t yysymbol) YY_ATTRIBUTE_UNUSED;
 static const char *const yytname[] =
 {
   "\"end of file\"", "error", "\"invalid token\"", "LIT", "ID", "INT",
-  "FLOAT", "CHAR", "BOOL", "STRING", "NEWTYPE", "IF", "WHILE", "FOR",
-  "BGIN", "END", "DEFINE", "CONST", "TYPEOF", "NR", "GR", "LW", "ASSIGN",
+  "FLOAT", "CHAR", "BOOL", "STRING", "NEWTYPE", "IF", "ELSE", "WHILE",
+  "FOR", "BGIN", "END", "DEFINE", "CONST", "TYPEOF", "GR", "LW", "ASSIGN",
   "PLUS", "MINUS", "ADD", "DEDUCT", "EQUAL", "DIV", "MOD", "AND", "OR",
-  "NOT", "XOR", "EVAL", "MAIN", "';'", "'['", "']'", "'{'", "'}'", "'('",
-  "')'", "','", "$accept", "progr", "var_globale", "definitii",
-  "definitie", "declaratii", "declaratie", "TIP", "user_types",
-  "user_type", "functii", "functie", "lista_param", "param", "list", "VAR",
-  "statement", "NEWVAL", "op_list", "operation", "OP", "lista_cond",
-  "cond", "OP_C", "lista_nr", "lista_lit", "bloc", YY_NULLPTR
+  "NOT", "XOR", "EVAL", "MAIN", "TRU", "FALS", "RET", "UTYPE", "NRI",
+  "NRF", "';'", "'['", "']'", "'{'", "'}'", "'('", "')'", "','", "'.'",
+  "'|'", "$accept", "progr", "var_globale", "definitie", "declaratii",
+  "declaratie", "BVAL", "TIP", "user_types", "user_type", "functii",
+  "functie", "declaratie_fct", "lista_param", "param", "list", "VAR",
+  "statement", "NEWVAL", "lista_op", "operatie", "OP", "apel", "lista_arg",
+  "arg", "lista_cond", "cond", "OP_C", "NR", "lista_nr", "lista_lit",
+  "bloc", YY_NULLPTR
 };
 
 static const char *
@@ -868,7 +863,7 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
-#define YYPACT_NINF (-176)
+#define YYPACT_NINF (-167)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
@@ -882,227 +877,320 @@ yysymbol_name (yysymbol_kind_t yysymbol)
    STATE-NUM.  */
 static const yytype_int16 yypact[] =
 {
-     221,  -176,  -176,     8,  -176,    17,    40,    57,   294,    68,
-      91,   209,   276,  -176,   262,    59,   100,    28,  -176,   209,
-     101,  -176,    49,    92,   138,    38,   140,   151,   164,   118,
-    -176,  -176,  -176,   178,    28,   209,  -176,  -176,   262,   184,
-     166,  -176,    74,  -176,  -176,    28,   171,  -176,  -176,   270,
-      32,   210,   262,  -176,  -176,   237,   201,   258,   259,   256,
-     268,   269,   271,   272,   228,   229,   275,   273,  -176,    28,
-    -176,   103,  -176,   296,    45,   281,  -176,  -176,  -176,   278,
-     295,   315,   153,   282,   280,   283,   303,    14,    14,   118,
-     116,    21,  -176,   287,    33,  -176,  -176,   122,  -176,  -176,
-    -176,   286,   304,   299,   321,   179,  -176,   305,   289,  -176,
-      81,  -176,   307,   315,   308,   293,   245,    14,   245,   290,
-    -176,   291,   298,   297,   300,   301,   125,    35,   182,   302,
-    -176,  -176,   224,    35,   224,  -176,  -176,  -176,   313,   306,
-     332,    67,   323,   281,   309,   315,  -176,   335,   310,   129,
-     311,  -176,  -176,  -176,  -176,  -176,  -176,  -176,  -176,   336,
-     312,   123,   162,   174,    14,   316,   317,   319,  -176,  -176,
-    -176,  -176,   320,   336,   318,   322,   128,   325,   324,   326,
-     327,  -176,  -176,   281,   152,   118,  -176,   315,   160,  -176,
-     315,  -176,   327,  -176,   245,  -176,  -176,   118,  -176,   118,
-    -176,   328,  -176,  -176,  -176,  -176,  -176,   172,  -176,  -176,
-    -176,  -176,   172,   327,  -176,   169,   192,  -176,  -176,   246,
-     193,  -176,   202,   220,   175,    54,    94,   118,  -176,   251,
-    -176,   338,  -176,  -176,  -176,  -176,  -176,  -176,  -176,  -176,
-     329,  -176,  -176,   186,   118,  -176,   105,  -176
+     474,  -167,  -167,  -167,  -167,  -167,    19,    21,   215,    50,
+      73,    82,   474,  -167,    49,    94,    68,  -167,   480,  -167,
+      85,  -167,    60,    56,   106,   459,  -167,  -167,  -167,    70,
+      68,   480,  -167,  -167,    93,  -167,  -167,   140,    68,  -167,
+    -167,   459,   494,  -167,    31,  -167,  -167,  -167,   -17,    20,
+      95,    99,   101,   108,   124,   255,   162,   201,   420,   249,
+    -167,  -167,  -167,    68,  -167,   308,   245,   499,   159,  -167,
+     437,   194,   172,  -167,  -167,   319,   364,   123,   212,   113,
+     113,   459,     7,    26,   176,  -167,  -167,   183,   184,   185,
+    -167,   -10,  -167,  -167,  -167,  -167,  -167,   121,  -167,  -167,
+     235,  -167,  -167,   219,   208,   215,   253,   130,  -167,  -167,
+    -167,   220,  -167,  -167,   235,  -167,  -167,   260,   239,   246,
+     250,  -167,   683,   192,   113,   683,   683,   683,   519,   683,
+     527,   277,   292,   294,   299,    26,   553,   555,   498,   562,
+    -167,  -167,  -167,  -167,   121,   639,   593,   576,   609,   653,
+     625,  -167,   -29,   307,   315,   350,  -167,  -167,   499,  -167,
+      86,   316,   335,   313,   321,  -167,  -167,  -167,  -167,  -167,
+    -167,  -167,  -167,   374,   358,   541,  -167,  -167,  -167,   328,
+    -167,  -167,   361,   113,   334,   339,   348,   498,   564,   498,
+    -167,  -167,  -167,  -167,   351,  -167,   170,   352,  -167,  -167,
+     359,  -167,   669,   669,   669,  -167,  -167,  -167,  -167,  -167,
+    -167,  -167,   399,   148,   362,  -167,  -167,  -167,   148,   368,
+     212,   212,  -167,  -167,  -167,  -167,   249,  -167,   138,  -167,
+     683,   459,   459,  -167,   504,  -167,  -167,  -167,   498,  -167,
+    -167,  -167,  -167,  -167,  -167,  -167,  -167,   127,   149,   148,
+     238,   261,   148,  -167,  -167,   123,  -167,   358,  -167,   242,
+     259,   459,  -167,  -167,   189,  -167,   266,   278,  -167,  -167,
+     289,   290,  -167,  -167,  -167,   391,  -167,   370,  -167,  -167,
+    -167,  -167,  -167,   375,   378,   459,   459,  -167,   295,   312,
+    -167,  -167
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
    Performed when YYTABLE does not specify something else to do.  Zero
    means the default is an error.  */
-static const yytype_int8 yydefact[] =
+static const yytype_uint8 yydefact[] =
 {
-       0,    31,    32,     0,    35,     0,     0,     0,     0,     0,
-       0,     0,    11,    13,    12,     0,     0,     0,    36,     0,
-       0,     9,     0,     0,     0,     0,     0,     0,     0,     0,
-       1,    33,    34,     0,     0,     0,     8,    14,    10,     0,
-       0,    17,    19,    37,     6,     0,     0,     7,    39,     0,
-       0,     0,     0,    16,    15,     0,     0,     0,    51,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     4,     0,
-       5,    19,    18,     0,     0,     0,     3,    40,    21,     0,
+       0,    38,    39,    40,    42,    41,     0,     0,     0,     0,
+       0,     0,     0,    11,     0,     0,     0,    44,     0,    47,
+       0,     9,     0,     0,     0,     0,    43,     1,    12,     0,
+       0,     0,     8,    10,    26,    45,     6,     0,     0,    48,
+       7,     0,     0,    15,     0,   126,   129,    14,     0,    57,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,    97,     0,     0,    70,    71,     0,    49,     2,
-      20,     0,     0,     0,     0,     0,    42,     0,     0,    95,
-       0,    38,     0,     0,     0,     0,     0,     0,     0,     0,
-      81,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-      72,    50,     0,     0,     0,    55,    54,    53,    25,     0,
-       0,    44,     0,     0,     0,     0,    24,     0,     0,     0,
-       0,    52,    91,    92,    89,    86,    87,    88,    90,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,    77,    78,
-      79,    80,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,    47,    69,     0,     0,     0,    43,     0,     0,    96,
-       0,    30,     0,    85,     0,    84,    83,     0,    58,     0,
-      62,     0,    68,    67,    66,    64,    76,     0,    63,    75,
-      74,    65,    56,     0,    93,     0,     0,    46,    45,     0,
-       0,    23,     0,     0,     0,     0,     0,     0,    73,     0,
-      22,     0,    48,    41,    27,    29,    28,    82,    57,    61,
-       0,    26,    94,     0,     0,    60,     0,    59
+      55,    13,     4,     0,     5,     0,     0,     0,     0,     3,
+       0,     0,     0,   127,   128,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,    36,    37,     0,     0,     0,
+      69,    26,   134,    56,    86,    87,    88,     0,     2,    18,
+       0,    34,    27,     0,     0,     0,     0,     0,    51,    49,
+      46,     0,    16,    19,     0,    35,    28,     0,     0,     0,
+       0,    60,     0,    57,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+      83,    84,    85,    82,     0,     0,     0,     0,     0,     0,
+       0,   132,     0,     0,    30,     0,    53,    50,     0,    17,
+       0,     0,     0,    59,    58,   124,   125,   122,   119,   120,
+     121,   123,   111,     0,     0,     0,   110,   108,   112,     0,
+     113,   109,     0,     0,     0,     0,     0,     0,     0,     0,
+      97,    98,    99,   100,     0,    89,     0,     0,    92,    91,
+       0,    90,     0,     0,     0,    67,    63,    65,    66,    68,
+      64,    21,     0,     0,     0,    54,    52,    25,     0,     0,
+       0,     0,   118,   117,   115,   116,   104,   107,     0,   102,
+       0,     0,     0,    75,     0,    81,    79,    80,     0,    76,
+      94,    96,    95,    78,    77,   133,   130,     0,     0,     0,
+       0,     0,     0,    62,    61,     0,   101,     0,   114,     0,
+       0,     0,    93,    29,     0,    20,     0,     0,    32,    24,
+       0,     0,   105,   106,   103,    70,    74,     0,   131,    31,
+      22,    33,    23,     0,     0,     0,     0,    73,     0,     0,
+      71,    72
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int16 yypgoto[] =
 {
-    -176,  -176,  -176,  -176,   339,    -6,    -9,     0,    -4,    11,
-     330,    78,   176,   204,  -175,   -74,   -62,   222,   -85,   -61,
-      61,   -87,   143,  -115,  -145,  -109,    15
+    -167,  -167,  -167,   397,  -167,    16,   -51,     1,   165,    11,
+     407,    33,  -167,  -167,   263,   -41,   -40,   -52,   196,   -76,
+     -19,  -167,   -75,  -167,   173,   -44,   -37,  -167,   -21,  -166,
+    -111,    63
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_uint8 yydefgoto[] =
 {
-       0,    10,    11,    12,    13,    14,    15,    39,    17,    18,
-      19,    20,   105,   106,    64,    65,    66,    97,   129,   130,
-     173,   119,   120,   159,   215,   110,    21
+       0,    11,    12,    13,    71,    56,   125,    57,    16,    17,
+      18,    19,    20,   107,   108,    58,    59,    60,    97,   188,
+     195,   196,   127,   228,   229,   175,   180,   173,   129,   247,
+     152,    21
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
    positive, shift that token.  If negative, reduce the rule whose
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
-static const yytype_uint8 yytable[] =
+static const yytype_int16 yytable[] =
 {
-      16,   121,    93,   161,   149,    40,    38,    34,    28,   135,
-     219,    33,    22,   118,   118,    45,   125,   128,    58,    33,
-     134,    23,   225,   137,   226,    58,    36,   122,    43,    40,
-     160,    69,    44,   116,    47,    33,   188,    58,     6,    58,
-     126,    53,   174,   118,    24,    43,    82,   223,   178,    68,
-      70,    79,   132,   134,   132,   117,    43,    54,    58,   134,
-      76,    25,   127,     9,   101,    59,    60,    61,   229,   246,
-      80,    49,    62,    40,   133,   104,   127,   201,   220,   224,
-      43,   222,    29,   102,    99,   193,    50,   196,    63,   182,
-     118,    30,    95,    96,   238,    41,    73,    46,    58,   206,
-     198,   200,   210,   140,    42,    59,    60,    61,   183,    58,
-     218,    74,    62,    46,    51,    75,    59,    60,    61,   123,
-      58,   146,    58,    62,   147,    73,    58,    58,    63,    59,
-      60,    61,    58,   134,   239,   124,    62,    48,   134,    63,
-      74,   136,   195,   104,    55,   247,   228,   209,   168,   169,
-     118,   228,    63,   170,   171,    56,    58,    93,     1,     2,
-       3,     4,     5,    93,    93,   240,    58,   172,    57,   191,
-       8,   217,   147,    59,    60,    61,    58,    52,    58,    58,
-      62,   245,    67,   104,    93,    59,    60,    61,    71,   176,
-      58,   132,    62,   111,   116,   176,    63,    59,    60,    61,
-     221,   197,    72,   147,    62,   168,   169,    77,    63,   230,
-     170,   171,   231,   199,     1,     2,    31,     4,    32,     6,
-      63,   142,   143,    84,   175,   244,     1,     2,     3,     4,
-       5,     6,    58,   234,   232,   143,   147,     7,     8,    59,
-      60,    61,   235,    92,     9,   147,    62,   168,   169,    81,
-      58,    94,   170,   171,    95,    96,     9,    59,    60,    61,
-     236,   233,    63,   231,    62,   152,   153,     1,     2,     3,
-       4,     5,   154,    78,    83,   155,   156,   157,   158,     8,
-      63,     1,     2,     3,     4,     5,     1,     2,    31,     4,
-      32,   241,     7,     8,   231,    85,    86,    87,   103,     1,
-       2,    26,     4,    27,     1,     2,    31,     4,    32,    88,
-      89,    98,    90,    91,    75,   100,   107,   108,   109,   113,
-     112,   114,   115,   131,   138,   141,   139,   144,   145,   148,
-     150,   151,   162,   163,   164,   179,   181,   185,   189,   165,
-      58,    35,   166,   167,   177,   180,   214,   186,   187,   190,
-     192,    37,   202,   203,   194,   204,   205,   242,   208,   216,
-     207,   211,     0,   184,   227,   213,   212,   237,     0,     0,
-       0,   243
+      70,    15,    47,   160,    87,    75,    93,   137,   138,    24,
+     132,    49,    65,    15,   101,    88,    14,   211,    93,    37,
+     212,   147,   148,    22,   115,    23,    76,    35,    29,   131,
+     123,    44,    37,    66,    89,   128,   130,   119,   121,   126,
+     126,    35,   133,   136,   102,   104,   145,    45,    46,    35,
+      44,    39,   250,   149,   116,   118,   120,   146,    72,    43,
+     138,   134,   139,    77,    39,    25,    45,    46,   106,   203,
+      78,    73,    74,   135,    35,    32,   150,    26,     6,    36,
+      44,    40,    27,   266,   126,   172,   270,   111,   176,   177,
+     178,    33,   181,    62,    64,   187,    45,    46,    34,   227,
+      41,    69,   248,     9,   202,    42,   155,   251,   176,   177,
+      48,   178,    61,   181,   189,    65,   122,   123,   198,   199,
+     201,   241,   223,   204,   122,   123,    98,    49,   198,   199,
+     233,   201,   217,   224,   226,   212,    66,    44,   267,   234,
+      67,   271,    79,   126,    68,    44,    80,    44,    81,    85,
+      86,   151,   225,    45,    46,    82,   240,    85,    86,   106,
+     124,    45,    46,    45,    46,   177,   178,   181,   144,   198,
+     201,    83,    44,   263,   123,   242,   264,    30,   157,   158,
+     253,   254,   227,    38,   199,   201,   256,   257,    45,    46,
+     259,   260,   246,   258,    44,   265,    63,   246,   212,     1,
+       2,     3,     4,     5,    90,    91,    67,    93,    93,   277,
+      45,    46,     8,    44,   112,   272,    49,   226,   140,   262,
+       1,     2,     3,     4,     5,   141,   142,   143,   246,    45,
+      46,   246,   287,    10,   273,    77,    93,    93,   151,   174,
+     110,   153,    78,   278,   288,   289,    49,     1,     2,     3,
+       4,     5,   154,    50,    10,    51,    52,   156,    84,    49,
+       8,    53,   159,    49,     1,     2,     3,     4,     5,    44,
+      50,    94,    51,    52,    95,    96,    54,     8,    53,    44,
+      55,    10,   161,   162,   268,    45,    46,   264,   275,   103,
+     163,    85,    86,    54,   164,    45,    46,    55,    10,    49,
+       1,     2,     3,     4,     5,   276,    50,   269,    51,    52,
+     212,    99,   279,     8,    53,   264,    49,     1,     2,     3,
+       4,     5,   113,    50,   280,    51,    52,   212,   183,    54,
+       8,    53,    44,    55,    10,   281,   282,   214,   264,   212,
+     184,   290,   185,    44,    85,    86,    54,   186,    45,    46,
+      55,    10,   213,   100,   215,    85,    86,   219,   291,    45,
+      46,   218,   123,   220,   114,    49,     1,     2,     3,     4,
+       5,   221,    50,   231,    51,    52,   235,   222,    49,     8,
+      53,   236,    49,     1,     2,     3,     4,     5,    44,    50,
+     237,    51,    52,   239,   243,    54,     8,    53,    44,    55,
+      10,   244,   245,   283,    45,    46,   232,   249,   117,    28,
+      85,    86,    54,   252,    45,    46,    55,    10,   284,    31,
+     285,   216,   255,   286,    49,     1,     2,     3,     4,     5,
+     274,    50,     0,    51,    52,     0,    92,     0,     8,    53,
+       0,    49,     1,     2,     3,     4,     5,     0,    50,     0,
+      51,    52,     0,   109,    54,     8,    53,     0,    55,    10,
+       0,     0,     0,    49,     1,     2,     3,     4,     5,     0,
+      50,    54,    51,    52,     0,    55,    10,     8,    53,     1,
+       2,     3,     4,     5,     6,     1,     2,     3,     4,     5,
+       6,     7,     8,    54,     0,     0,     0,    55,    10,     1,
+       2,     3,     4,     5,     1,     2,     3,     4,     5,     9,
+       0,     0,     8,    10,     0,     9,     0,   105,     0,    10,
+       0,   190,   191,     0,   165,   166,   192,   193,     0,     0,
+       0,   167,     0,    10,   168,   169,   170,   171,    10,   165,
+     166,     0,     0,     0,     0,     0,   167,   165,   166,   168,
+     169,   170,   171,     0,   167,   261,     0,   168,   169,   170,
+     171,   165,   166,     0,     0,     0,     0,   179,   167,     0,
+       0,   168,   169,   170,   171,   182,   190,   191,   190,   191,
+       0,   192,   193,   192,   193,   190,   191,   190,   191,   230,
+     192,   193,   192,   193,     0,     0,     0,     0,     0,   190,
+     191,   194,     0,   197,   192,   193,     0,     0,     0,     0,
+     200,     0,   238,   165,   166,     0,   190,   191,   207,     0,
+     167,   192,   193,   168,   169,   170,   171,     0,     0,   165,
+     166,     0,   190,   191,     0,   206,   167,   192,   193,   168,
+     169,   170,   171,     0,     0,   165,   166,     0,   190,   191,
+       0,   208,   167,   192,   193,   168,   169,   170,   171,   165,
+     166,     0,     0,     0,     0,     0,   167,   210,     0,   168,
+     169,   170,   171,   165,   166,     0,     0,     0,     0,     0,
+     167,   205,     0,   168,   169,   170,   171,     0,     0,   165,
+     166,     0,   190,   191,     0,   209,   167,   192,   193,   168,
+     169,   170,   171,   165,   166,     0,     0,     0,     0,     0,
+     167,     0,     0,   168,   169,   170,   171
 };
 
 static const yytype_int16 yycheck[] =
 {
-       0,    88,    64,   118,   113,    14,    12,    11,     8,    94,
-     185,    11,     4,    87,    88,    19,    90,    91,     4,    19,
-      94,     4,   197,    97,   199,     4,    11,    89,    17,    38,
-     117,    35,    17,    19,    19,    35,   145,     4,    10,     4,
-      19,     3,   127,   117,     4,    34,    52,   192,   133,    34,
-      35,    19,    19,   127,    19,    41,    45,    19,     4,   133,
-      45,     4,    41,    35,    19,    11,    12,    13,   213,   244,
-      38,    22,    18,    82,    41,    75,    41,   164,   187,   194,
-      69,   190,    14,    38,    69,   159,    37,   161,    34,    22,
-     164,     0,    25,    26,    40,    36,    22,    19,     4,   173,
-     162,   163,   176,   103,     4,    11,    12,    13,    41,     4,
-     184,    37,    18,    35,    22,    41,    11,    12,    13,     3,
-       4,    40,     4,    18,    43,    22,     4,     4,    34,    11,
-      12,    13,     4,   207,    40,    19,    18,    36,   212,    34,
-      37,    19,    19,   143,     4,    40,   207,    19,    23,    24,
-     224,   212,    34,    28,    29,     4,     4,   219,     5,     6,
-       7,     8,     9,   225,   226,   227,     4,    42,     4,    40,
-      17,    19,    43,    11,    12,    13,     4,    39,     4,     4,
-      18,   243,     4,   183,   246,    11,    12,    13,     4,   128,
-       4,    19,    18,    40,    19,   134,    34,    11,    12,    13,
-      40,    39,    36,    43,    18,    23,    24,    36,    34,    40,
-      28,    29,    43,    39,     5,     6,     7,     8,     9,    10,
-      34,    42,    43,    22,    42,    39,     5,     6,     7,     8,
-       9,    10,     4,    40,    42,    43,    43,    16,    17,    11,
-      12,    13,    40,    15,    35,    43,    18,    23,    24,    39,
-       4,    22,    28,    29,    25,    26,    35,    11,    12,    13,
-      40,    15,    34,    43,    18,    20,    21,     5,     6,     7,
-       8,     9,    27,     3,    37,    30,    31,    32,    33,    17,
-      34,     5,     6,     7,     8,     9,     5,     6,     7,     8,
-       9,    40,    16,    17,    43,    37,    37,    41,    17,     5,
-       6,     7,     8,     9,     5,     6,     7,     8,     9,    41,
-      41,    36,    41,    41,    41,    19,    38,    22,     3,    39,
-      38,    38,    19,    36,    38,     4,    22,    22,    39,    22,
-      22,    38,    42,    42,    36,    22,     4,    14,     3,    42,
-       4,    11,    42,    42,    42,    39,    19,   143,    39,    39,
-      39,    12,    36,    36,    42,    36,    36,    19,    36,   183,
-      42,    36,    -1,   141,    36,    39,    42,   224,    -1,    -1,
-      -1,    42
+      41,     0,    23,   114,    55,    22,    58,    83,    83,     8,
+       3,     4,    22,    12,    65,    55,     0,    46,    70,    18,
+      49,    97,    97,     4,    75,     4,    43,    16,    12,    81,
+       4,    24,    31,    43,    55,    79,    80,    77,    78,    79,
+      80,    30,    82,    83,    65,    66,    97,    40,    41,    38,
+      24,    18,   218,    97,    75,    76,    77,    97,    42,     3,
+     135,    82,    83,    43,    31,    15,    40,    41,    67,   144,
+      50,    40,    41,    47,    63,    12,    97,     4,    10,    16,
+      24,    18,     0,   249,   124,   122,   252,    71,   125,   126,
+     127,    42,   129,    30,    31,   135,    40,    41,     4,   174,
+      15,    38,   213,    35,   144,    45,   105,   218,   145,   146,
+       4,   148,    42,   150,   135,    22,     3,     4,   137,   138,
+     139,   196,   173,   144,     3,     4,    63,     4,   147,   148,
+     182,   150,    46,   173,   174,    49,    43,    24,   249,   183,
+      47,   252,    47,   183,     4,    24,    47,    24,    47,    36,
+      37,     3,   173,    40,    41,    47,   196,    36,    37,   158,
+      47,    40,    41,    40,    41,   202,   203,   204,    47,   188,
+     189,    47,    24,    46,     4,   196,    49,    12,    48,    49,
+     220,   221,   257,    18,   203,   204,    48,    49,    40,    41,
+     231,   232,   213,   230,    24,    46,    31,   218,    49,     5,
+       6,     7,     8,     9,    42,     4,    47,   259,   260,   261,
+      40,    41,    18,    24,    42,   255,     4,   257,    42,   238,
+       5,     6,     7,     8,     9,    42,    42,    42,   249,    40,
+      41,   252,   284,    39,   255,    43,   288,   289,     3,    47,
+      46,    22,    50,   264,   285,   286,     4,     5,     6,     7,
+       8,     9,    44,    11,    39,    13,    14,     4,     3,     4,
+      18,    19,    42,     4,     5,     6,     7,     8,     9,    24,
+      11,    22,    13,    14,    25,    26,    34,    18,    19,    24,
+      38,    39,    22,    44,    46,    40,    41,    49,    46,    44,
+      44,    36,    37,    34,    44,    40,    41,    38,    39,     4,
+       5,     6,     7,     8,     9,    46,    11,    46,    13,    14,
+      49,     3,    46,    18,    19,    49,     4,     5,     6,     7,
+       8,     9,     3,    11,    46,    13,    14,    49,    51,    34,
+      18,    19,    24,    38,    39,    46,    46,    22,    49,    49,
+      48,    46,    48,    24,    36,    37,    34,    48,    40,    41,
+      38,    39,    45,    45,     4,    36,    37,    22,    46,    40,
+      41,    45,     4,    50,    45,     4,     5,     6,     7,     8,
+       9,    50,    11,    45,    13,    14,    42,     3,     4,    18,
+      19,    42,     4,     5,     6,     7,     8,     9,    24,    11,
+      42,    13,    14,    42,    42,    34,    18,    19,    24,    38,
+      39,    42,     3,    12,    40,    41,    45,    45,    44,    12,
+      36,    37,    34,    45,    40,    41,    38,    39,    48,    12,
+      45,   158,   226,    45,     4,     5,     6,     7,     8,     9,
+     257,    11,    -1,    13,    14,    -1,    16,    -1,    18,    19,
+      -1,     4,     5,     6,     7,     8,     9,    -1,    11,    -1,
+      13,    14,    -1,    16,    34,    18,    19,    -1,    38,    39,
+      -1,    -1,    -1,     4,     5,     6,     7,     8,     9,    -1,
+      11,    34,    13,    14,    -1,    38,    39,    18,    19,     5,
+       6,     7,     8,     9,    10,     5,     6,     7,     8,     9,
+      10,    17,    18,    34,    -1,    -1,    -1,    38,    39,     5,
+       6,     7,     8,     9,     5,     6,     7,     8,     9,    35,
+      -1,    -1,    18,    39,    -1,    35,    -1,    18,    -1,    39,
+      -1,    23,    24,    -1,    20,    21,    28,    29,    -1,    -1,
+      -1,    27,    -1,    39,    30,    31,    32,    33,    39,    20,
+      21,    -1,    -1,    -1,    -1,    -1,    27,    20,    21,    30,
+      31,    32,    33,    -1,    27,    51,    -1,    30,    31,    32,
+      33,    20,    21,    -1,    -1,    -1,    -1,    48,    27,    -1,
+      -1,    30,    31,    32,    33,    48,    23,    24,    23,    24,
+      -1,    28,    29,    28,    29,    23,    24,    23,    24,    48,
+      28,    29,    28,    29,    -1,    -1,    -1,    -1,    -1,    23,
+      24,    48,    -1,    48,    28,    29,    -1,    -1,    -1,    -1,
+      48,    -1,    48,    20,    21,    -1,    23,    24,    42,    -1,
+      27,    28,    29,    30,    31,    32,    33,    -1,    -1,    20,
+      21,    -1,    23,    24,    -1,    42,    27,    28,    29,    30,
+      31,    32,    33,    -1,    -1,    20,    21,    -1,    23,    24,
+      -1,    42,    27,    28,    29,    30,    31,    32,    33,    20,
+      21,    -1,    -1,    -1,    -1,    -1,    27,    42,    -1,    30,
+      31,    32,    33,    20,    21,    -1,    -1,    -1,    -1,    -1,
+      27,    42,    -1,    30,    31,    32,    33,    -1,    -1,    20,
+      21,    -1,    23,    24,    -1,    42,    27,    28,    29,    30,
+      31,    32,    33,    20,    21,    -1,    -1,    -1,    -1,    -1,
+      27,    -1,    -1,    30,    31,    32,    33
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
    state STATE-NUM.  */
 static const yytype_int8 yystos[] =
 {
-       0,     5,     6,     7,     8,     9,    10,    16,    17,    35,
-      45,    46,    47,    48,    49,    50,    51,    52,    53,    54,
-      55,    70,     4,     4,     4,     4,     7,     9,    51,    14,
-       0,     7,     9,    51,    52,    54,    70,    48,    49,    51,
-      50,    36,     4,    53,    70,    52,    55,    70,    36,    22,
-      37,    22,    39,     3,    19,     4,     4,     4,     4,    11,
-      12,    13,    18,    34,    58,    59,    60,     4,    70,    52,
-      70,     4,    36,    22,    37,    41,    70,    36,     3,    19,
-      38,    39,    49,    37,    22,    37,    37,    41,    41,    41,
-      41,    41,    15,    60,    22,    25,    26,    61,    36,    70,
-      19,    19,    38,    17,    51,    56,    57,    38,    22,     3,
-      69,    40,    38,    39,    38,    19,    19,    41,    59,    65,
-      66,    65,    60,     3,    19,    59,    19,    41,    59,    62,
-      63,    36,    19,    41,    59,    62,    19,    59,    38,    22,
-      51,     4,    42,    43,    22,    39,    40,    43,    22,    69,
-      22,    38,    20,    21,    27,    30,    31,    32,    33,    67,
-      65,    67,    42,    42,    36,    42,    42,    42,    23,    24,
-      28,    29,    42,    64,    62,    42,    64,    42,    62,    22,
-      39,     4,    22,    41,    61,    14,    57,    39,    69,     3,
-      39,    40,    39,    59,    42,    19,    59,    39,    60,    39,
-      60,    65,    36,    36,    36,    36,    59,    42,    36,    19,
-      59,    36,    42,    39,    19,    68,    56,    19,    59,    58,
-      69,    40,    69,    68,    67,    58,    58,    36,    63,    68,
-      40,    43,    42,    15,    40,    40,    40,    66,    40,    40,
-      60,    40,    19,    42,    39,    60,    58,    40
+       0,     5,     6,     7,     8,     9,    10,    17,    18,    35,
+      39,    53,    54,    55,    57,    59,    60,    61,    62,    63,
+      64,    83,     4,     4,    59,    15,     4,     0,    55,    57,
+      60,    62,    83,    42,     4,    61,    83,    59,    60,    63,
+      83,    15,    45,     3,    24,    40,    41,    80,     4,     4,
+      11,    13,    14,    19,    34,    38,    57,    59,    67,    68,
+      69,    42,    83,    60,    83,    22,    43,    47,     4,    83,
+      67,    56,    57,    40,    41,    22,    43,    43,    50,    47,
+      47,    47,    47,    47,     3,    36,    37,    58,    68,    80,
+      42,     4,    16,    69,    22,    25,    26,    70,    83,     3,
+      45,    58,    80,    44,    80,    18,    59,    65,    66,    16,
+      46,    57,    42,     3,    45,    58,    80,    44,    80,    68,
+      80,    68,     3,     4,    47,    58,    68,    74,    77,    80,
+      77,    69,     3,    68,    80,    47,    68,    71,    74,    80,
+      42,    42,    42,    42,    47,    58,    68,    71,    74,    77,
+      80,     3,    82,    22,    44,    59,     4,    48,    49,    42,
+      82,    22,    44,    44,    44,    20,    21,    27,    30,    31,
+      32,    33,    78,    79,    47,    77,    78,    78,    78,    48,
+      78,    78,    48,    51,    48,    48,    48,    68,    71,    80,
+      23,    24,    28,    29,    48,    72,    73,    48,    72,    72,
+      48,    72,    68,    74,    80,    42,    42,    42,    42,    42,
+      42,    46,    49,    45,    22,     4,    66,    46,    45,    22,
+      50,    50,     3,    58,    68,    80,    68,    74,    75,    76,
+      48,    45,    45,    69,    77,    42,    42,    42,    48,    42,
+      68,    74,    80,    42,    42,     3,    80,    81,    82,    45,
+      81,    82,    45,    68,    68,    70,    48,    49,    78,    67,
+      67,    51,    72,    46,    49,    46,    81,    82,    46,    46,
+      81,    82,    68,    80,    76,    46,    46,    69,    80,    46,
+      46,    46,    46,    12,    48,    45,    45,    69,    67,    67,
+      46,    46
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr1[] =
 {
-       0,    44,    45,    45,    45,    45,    45,    45,    45,    45,
-      46,    46,    46,    47,    47,    48,    48,    49,    49,    50,
-      50,    50,    50,    50,    50,    50,    50,    50,    50,    50,
-      50,    51,    51,    51,    51,    51,    52,    52,    53,    54,
-      54,    55,    56,    56,    57,    57,    57,    57,    57,    58,
-      58,    59,    59,    60,    60,    60,    60,    60,    60,    60,
-      60,    60,    60,    60,    60,    60,    60,    60,    60,    61,
-      61,    61,    62,    62,    63,    63,    63,    64,    64,    64,
-      64,    65,    65,    66,    66,    66,    67,    67,    67,    67,
-      67,    67,    67,    68,    68,    69,    69,    70
+       0,    52,    53,    53,    53,    53,    53,    53,    53,    53,
+      54,    54,    54,    54,    55,    55,    56,    56,    57,    57,
+      57,    57,    57,    57,    57,    57,    57,    57,    57,    57,
+      57,    57,    57,    57,    57,    57,    58,    58,    59,    59,
+      59,    59,    59,    59,    60,    60,    61,    62,    62,    63,
+      64,    65,    65,    66,    66,    67,    67,    68,    68,    68,
+      68,    68,    68,    69,    69,    69,    69,    69,    69,    69,
+      69,    69,    69,    69,    69,    69,    69,    69,    69,    69,
+      69,    69,    69,    69,    69,    69,    70,    70,    70,    71,
+      71,    71,    71,    71,    72,    72,    72,    73,    73,    73,
+      73,    74,    75,    75,    76,    76,    76,    76,    77,    77,
+      77,    77,    77,    77,    77,    78,    78,    78,    78,    79,
+      79,    79,    79,    79,    79,    79,    80,    80,    80,    80,
+      81,    81,    82,    82,    83
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr2[] =
 {
        0,     2,     4,     3,     3,     3,     2,     2,     2,     1,
-       2,     1,     1,     1,     2,     3,     3,     2,     3,     2,
-       4,     4,     8,     8,     6,     5,     9,     9,     9,     9,
-       7,     1,     1,     1,     1,     1,     1,     2,     5,     2,
-       3,     8,     1,     3,     2,     4,     4,     3,     5,     2,
-       3,     1,     4,     3,     3,     3,     5,     7,     5,    11,
-       9,     7,     5,     5,     5,     5,     5,     5,     5,     1,
-       1,     1,     1,     4,     3,     3,     3,     1,     1,     1,
-       1,     1,     5,     3,     3,     3,     1,     1,     1,     1,
-       1,     1,     1,     1,     3,     1,     3,     4
+       2,     1,     2,     3,     3,     3,     2,     3,     4,     5,
+       8,     6,     9,    10,     9,     7,     2,     4,     5,     8,
+       5,     9,     9,    10,     4,     5,     1,     1,     1,     1,
+       1,     1,     1,     2,     1,     2,     5,     1,     2,     4,
+       5,     1,     3,     2,     3,     1,     2,     1,     4,     4,
+       3,     6,     6,     4,     4,     4,     4,     4,     4,     2,
+       7,    11,    11,     9,     7,     5,     5,     5,     5,     5,
+       5,     5,     3,     3,     3,     3,     1,     1,     1,     2,
+       2,     2,     2,     4,     2,     2,     2,     1,     1,     1,
+       1,     4,     1,     3,     1,     3,     3,     1,     2,     2,
+       2,     2,     2,     2,     4,     2,     2,     2,     2,     1,
+       1,     1,     1,     1,     1,     1,     1,     2,     2,     1,
+       1,     3,     1,     3,     4
 };
 
 
@@ -1566,7 +1654,7 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* progr: var_globale functii user_types bloc  */
-#line 169 "proiect.y"
+#line 133 "proiect.y"
                                              {printf("Sintaxă corectă\n");
                                              if (corect) {
                                              printf("Corect semantic\n");
@@ -1575,11 +1663,11 @@ yyreduce:
                                              else
                                              printf("Incorect semantic\n");
                                              }
-#line 1579 "y.tab.c"
+#line 1667 "y.tab.c"
     break;
 
   case 3: /* progr: functii user_types bloc  */
-#line 177 "proiect.y"
+#line 141 "proiect.y"
                                 {printf("Sintaxă corectă\n");
                               if (corect) {
                               printf("Corect semantic\n");
@@ -1588,12 +1676,12 @@ yyreduce:
                               else
                               printf("Incorect semantic\n");
                               }
-#line 1592 "y.tab.c"
+#line 1680 "y.tab.c"
     break;
 
   case 4: /* progr: var_globale user_types bloc  */
-#line 185 "proiect.y"
-                                    {printf("Sintaxă corectă\n");
+#line 149 "proiect.y"
+                                     {printf("Sintaxă corectă\n");
                                    if (corect) {
                                    printf("Corect semantic\n");
                                    printTable();
@@ -1601,12 +1689,12 @@ yyreduce:
                                    else
                                    printf("Incorect semantic\n");
                                    }
-#line 1605 "y.tab.c"
+#line 1693 "y.tab.c"
     break;
 
   case 5: /* progr: var_globale functii bloc  */
-#line 193 "proiect.y"
-                                 {printf("Sintaxă corectă\n");
+#line 157 "proiect.y"
+                                  {printf("Sintaxă corectă\n");
                                    if (corect) {
                                    printf("Corect semantic\n");
                                    printTable();
@@ -1614,11 +1702,11 @@ yyreduce:
                                    else
                                    printf("Incorect semantic\n");
                                    }
-#line 1618 "y.tab.c"
+#line 1706 "y.tab.c"
     break;
 
   case 6: /* progr: user_types bloc  */
-#line 201 "proiect.y"
+#line 165 "proiect.y"
                         {printf("Sintaxă corectă\n");
                          if (corect) {
                          printf("Corect semantic\n");
@@ -1627,11 +1715,11 @@ yyreduce:
                          else
                          printf("Incorect semantic\n");
                          }
-#line 1631 "y.tab.c"
+#line 1719 "y.tab.c"
     break;
 
   case 7: /* progr: functii bloc  */
-#line 209 "proiect.y"
+#line 173 "proiect.y"
                      {printf("Sintaxă corectă\n");
                     if (corect) {
                     printf("Corect semantic\n");
@@ -1640,12 +1728,12 @@ yyreduce:
                     else
                     printf("Incorect semantic\n");
                     }
-#line 1644 "y.tab.c"
+#line 1732 "y.tab.c"
     break;
 
   case 8: /* progr: var_globale bloc  */
-#line 217 "proiect.y"
-                         {printf("Sintaxă corectă\n");
+#line 181 "proiect.y"
+                          {printf("Sintaxă corectă\n");
                          if (corect) {
                          printf("Corect semantic\n");
                          printTable();
@@ -1653,11 +1741,11 @@ yyreduce:
                          else
                          printf("Incorect semantic\n");
                          }
-#line 1657 "y.tab.c"
+#line 1745 "y.tab.c"
     break;
 
   case 9: /* progr: bloc  */
-#line 225 "proiect.y"
+#line 189 "proiect.y"
              {printf("Sintaxă corectă\n");
               if (corect) {
                printf("Corect semantic\n");
@@ -1666,304 +1754,869 @@ yyreduce:
                else
                printf("Incorect semantic\n");
                }
-#line 1670 "y.tab.c"
+#line 1758 "y.tab.c"
     break;
 
-  case 19: /* declaratie: TIP ID  */
-#line 247 "proiect.y"
-                    {
-                    structDefinita((yyvsp[-1].tip)->nume);
-                    insertVarTable((yyvsp[0].strval), (yyvsp[-1].tip));
-                    }
-#line 1679 "y.tab.c"
+  case 10: /* var_globale: declaratie ';'  */
+#line 198 "proiect.y"
+                             { 
+                      if((yyvsp[-1].param_t)->cons) 
+                          insertConstTable((yyvsp[-1].param_t)->nume,(yyvsp[-1].param_t)->tip); 
+                      else
+                           insertVarTable((yyvsp[-1].param_t)->nume,(yyvsp[-1].param_t)->tip);
+            }
+#line 1769 "y.tab.c"
     break;
 
-  case 20: /* declaratie: TIP ID ASSIGN NR  */
-#line 251 "proiect.y"
-                              {
-                              structDefinita((yyvsp[-3].tip)->nume);
-                              struct tip_t *tip_expr=tipExpr((yyvsp[0].val));
-                              tipuriEgale(tip_expr, (yyvsp[-3].tip));
-                              insertVarTable((yyvsp[-2].strval), (yyvsp[-3].tip));
-                              }
-#line 1690 "y.tab.c"
+  case 13: /* var_globale: var_globale declaratie ';'  */
+#line 206 "proiect.y"
+                                         { 
+                      if((yyvsp[-1].param_t)->cons) 
+                          insertConstTable((yyvsp[-1].param_t)->nume,(yyvsp[-1].param_t)->tip); 
+                      else
+                           insertVarTable((yyvsp[-1].param_t)->nume,(yyvsp[-1].param_t)->tip);
+            }
+#line 1780 "y.tab.c"
     break;
 
-  case 21: /* declaratie: CHAR ID ASSIGN LIT  */
-#line 257 "proiect.y"
-                               {
-                              struct tip_t *tip_expr=tipExpr((yyvsp[0].charval));
-                              struct tip_t *tip_expr2=initTip_t("char");
-                              tipuriEgale(tip_expr,tip_expr2);
-                              insertVarTable((yyvsp[-2].strval),tip_expr2);
-                              }
-#line 1701 "y.tab.c"
+  case 14: /* definitie: DEFINE ID NR  */
+#line 213 "proiect.y"
+                         { insertConstTable((yyvsp[-1].strval),(yyvsp[0].valnr)->tip); }
+#line 1786 "y.tab.c"
     break;
 
-  case 22: /* declaratie: TIP ID '[' ']' ASSIGN '{' lista_nr '}'  */
-#line 263 "proiect.y"
-                                                   {
-                              structDefinita((yyvsp[-7].tip)->nume);
-                              struct tip_t *tip_expr=tipExpr((yyvsp[-1].expresie));
-                              tipuriEgale(tip_expr,(yyvsp[-7].tip));
-                              insertVarTable((yyvsp[-6].strval), (yyvsp[-7].tip));
-                              }
-#line 1712 "y.tab.c"
+  case 15: /* definitie: DEFINE ID LIT  */
+#line 214 "proiect.y"
+                          { struct tip_t *tip_expr=initTip_t("char"); insertConstTable((yyvsp[-1].strval),tip_expr); }
+#line 1792 "y.tab.c"
     break;
 
-  case 23: /* declaratie: CHAR ID '[' ']' ASSIGN '{' lista_lit '}'  */
-#line 269 "proiect.y"
-                                                     {
-                              struct tip_t *tip_expr=tipExpr((yyvsp[-1].expresie));
-                              struct tip_t *tip_expr2=initTip_t("char");
-                              tipuriEgale(tip_expr,tip_expr2);
-                              insertVarTable((yyvsp[-6].strval), tip_expr2);
-                              }
-#line 1723 "y.tab.c"
-    break;
-
-  case 24: /* declaratie: STRING ID ASSIGN '{' lista_lit '}'  */
-#line 275 "proiect.y"
-                                               {
-                              struct tip_t *tip_expr=tipExpr((yyvsp[-1].expresie));
-                               struct tip_t *tip_expr2=initTip_t("string");
-                              tipuriEgale(tip_expr,tip_expr2);
-                              insertVarTable((yyvsp[-4].strval), tip_expr2);
-                              }
-#line 1734 "y.tab.c"
-    break;
-
-  case 25: /* declaratie: TIP ID '[' NR ']'  */
-#line 281 "proiect.y"
-                              {
-                              structDefinita((yyvsp[-4].tip)->nume);
-                              insertVarTable((yyvsp[-3].strval), (yyvsp[-4].tip));
-                              }
-#line 1743 "y.tab.c"
-    break;
-
-  case 26: /* declaratie: TIP ID '[' NR ']' ASSIGN '{' lista_nr '}'  */
-#line 285 "proiect.y"
-                                                      {
-                              structDefinita((yyvsp[-8].tip)->nume);
-                              struct tip_t *tip_expr=tipExpr((yyvsp[-1].expresie));
-                              tipuriEgale(tip_expr, (yyvsp[-8].tip));
-                              insertVarTable((yyvsp[-7].strval), (yyvsp[-8].tip));
-                              }
-#line 1754 "y.tab.c"
-    break;
-
-  case 27: /* declaratie: CHAR ID '[' NR ']' ASSIGN '{' lista_lit '}'  */
-#line 291 "proiect.y"
-                                                        {
-                              struct tip_t *tip_expr=tipExpr((yyvsp[-1].expresie));
-                              struct tip_t *tip_expr2=initTip_t("char");
-                              tipuriEgale(tip_expr,tip_expr2);
-                              insertVarTable((yyvsp[-7].strval), tip_expr2);
-                              }
-#line 1765 "y.tab.c"
-    break;
-
-  case 28: /* declaratie: CONST TIP ID '[' ']' ASSIGN '{' lista_nr '}'  */
-#line 297 "proiect.y"
-                                                         {
-                              structDefinita((yyvsp[-7].tip)->nume);
-                              struct tip_t *tip_expr=tipExpr((yyvsp[-1].expresie));
-                              tipuriEgale(tip_expr, (yyvsp[-7].tip));
-                              insertVarTable((yyvsp[-6].strval), (yyvsp[-7].tip));
-                              }
-#line 1776 "y.tab.c"
-    break;
-
-  case 29: /* declaratie: CONST CHAR ID '[' ']' ASSIGN '{' lista_lit '}'  */
-#line 303 "proiect.y"
-                                                           {
-                              struct tip_t *tip_expr=tipExpr((yyvsp[-1].expresie));
-                               struct tip_t *tip_expr2=initTip_t("char");
-                              tipuriEgale(tip_expr,tip_expr2);
-                              insertVarTable((yyvsp[-7].strval), tip_expr2);
-                              }
-#line 1787 "y.tab.c"
-    break;
-
-  case 30: /* declaratie: CONST STRING ID ASSIGN '{' lista_lit '}'  */
-#line 309 "proiect.y"
-                                                     {
-                              struct tip_t *tip_expr=tipExpr((yyvsp[-1].expresie));
-                               struct tip_t *tip_expr2=initTip_t("string");
-                              tipuriEgale(tip_expr,tip_expr2);
-                              insertVarTable((yyvsp[-5].strval), tip_expr2);
-                              }
+  case 16: /* declaratii: declaratie ';'  */
+#line 216 "proiect.y"
+                            {(yyval.lista_param_t) = initTipListParam((yyvsp[-1].param_t));}
 #line 1798 "y.tab.c"
     break;
 
-  case 31: /* TIP: INT  */
-#line 316 "proiect.y"
-          { (yyval.tip)=initTip_t((yyvsp[0].strval)); }
-#line 1804 "y.tab.c"
-    break;
-
-  case 32: /* TIP: FLOAT  */
-#line 317 "proiect.y"
-            { (yyval.tip)=initTip_t((yyvsp[0].strval)); }
-#line 1810 "y.tab.c"
-    break;
-
-  case 33: /* TIP: CHAR  */
-#line 318 "proiect.y"
-           { (yyval.tip)=initTip_t((yyvsp[0].strval)); }
-#line 1816 "y.tab.c"
-    break;
-
-  case 34: /* TIP: STRING  */
-#line 319 "proiect.y"
-             { (yyval.tip)=initTip_t((yyvsp[0].strval)); }
-#line 1822 "y.tab.c"
-    break;
-
-  case 35: /* TIP: BOOL  */
-#line 320 "proiect.y"
-           { (yyval.tip)=initTip_t((yyvsp[0].strval)); }
-#line 1828 "y.tab.c"
-    break;
-
-  case 41: /* functie: TIP ID '(' lista_param ')' BGIN list END  */
-#line 331 "proiect.y"
-                {
-                    insertFuncTable((yyvsp[-6].strval), (yyvsp[-7].tip), (yyvsp[-4].lista_param_t));
-                    functie_curenta = (yyvsp[-6].strval);
-                }
-#line 1837 "y.tab.c"
-    break;
-
-  case 42: /* lista_param: param  */
-#line 336 "proiect.y"
-                    {(yyval.lista_param_t) = 0;}
-#line 1843 "y.tab.c"
-    break;
-
-  case 43: /* lista_param: lista_param ',' param  */
-#line 337 "proiect.y"
-                                    {(yyval.lista_param_t) = 0;}
-#line 1849 "y.tab.c"
-    break;
-
-  case 44: /* param: TIP ID  */
-#line 340 "proiect.y"
-               {(yyval.param) = 0;}
-#line 1855 "y.tab.c"
-    break;
-
-  case 45: /* param: TIP ID NEWVAL VAR  */
-#line 341 "proiect.y"
-                          {(yyval.param) = 0;}
-#line 1861 "y.tab.c"
-    break;
-
-  case 46: /* param: TIP ID NEWVAL NR  */
-#line 342 "proiect.y"
-                         {(yyval.param) = 0;}
-#line 1867 "y.tab.c"
-    break;
-
-  case 47: /* param: CONST TIP ID  */
-#line 343 "proiect.y"
-                     {(yyval.param) = 0;}
-#line 1873 "y.tab.c"
-    break;
-
-  case 48: /* param: TIP ID '(' lista_param ')'  */
-#line 344 "proiect.y"
-                                   {(yyval.param) = 0;}
-#line 1879 "y.tab.c"
-    break;
-
-  case 51: /* VAR: ID  */
-#line 349 "proiect.y"
-         {
-         //de adaugat verificare daca e declarat si nu e vector
-         (yyval.v)=initVar((yyvsp[0].strval), -1);
-         }
-#line 1888 "y.tab.c"
-    break;
-
-  case 52: /* VAR: ID '[' NR ']'  */
-#line 353 "proiect.y"
-                   {
-         //de adaugat verificare daca e declarat si e vector
-         (yyval.v)=initVar((yyvsp[-3].strval), (yyvsp[-1].val));
-         }
-#line 1897 "y.tab.c"
-    break;
-
-  case 53: /* statement: VAR NEWVAL VAR  */
-#line 358 "proiect.y"
-                           {
-                         varDefinita((yyvsp[-2].v)->nume);
-                         struct tip_t *tip_var1 = tipVar((yyvsp[0].v));
-                         struct tip_t *tip_var2 = tipVar((yyvsp[-2].v));
-                         tipuriEgale(tip_var1, tip_var2);
-                         }
-#line 1908 "y.tab.c"
-    break;
-
-  case 55: /* statement: VAR ASSIGN op_list  */
-#line 365 "proiect.y"
-                              {
-                              varDefinita((yyvsp[-2].v)->nume);
-                              struct tip_t *tip_expr = tipExpr((yyvsp[0].expresie));
-                              struct tip_t *tip_var = tipVar((yyvsp[-2].v));
-                              tipuriEgale(tip_expr, tip_var);
-                              }
-#line 1919 "y.tab.c"
-    break;
-
-  case 56: /* statement: VAR ASSIGN '(' op_list ')'  */
-#line 371 "proiect.y"
+  case 17: /* declaratii: declaratii declaratie ';'  */
+#line 217 "proiect.y"
                                       {
-                                        varDefinita((yyvsp[-4].v)->nume);
-                                        struct tip_t *tip_expr = tipExpr((yyvsp[-1].expresie));
-                                        struct tip_t *tip_var = tipVar((yyvsp[-4].v));
-                                        tipuriEgale(tip_expr, tip_var);
-                                        }
-#line 1930 "y.tab.c"
+                               (yyval.lista_param_t)=(yyvsp[-2].lista_param_t);
+                               while((yyvsp[-2].lista_param_t)->urmator)
+                                   (yyvsp[-2].lista_param_t)=(yyvsp[-2].lista_param_t)->urmator;
+                               (yyvsp[-2].lista_param_t)->urmator=initTipListParam((yyvsp[-1].param_t));
+                             }
+#line 1809 "y.tab.c"
     break;
 
-  case 64: /* statement: EVAL '(' NR ')' ';'  */
-#line 384 "proiect.y"
-                                {if (corect){
-                                                 printf("Rezultatul expresiei din eval este %d\n", (yyvsp[-2].val));
-                                             }
-                                             else {printf("Valorile nu sunt de tip int\n");}}
-#line 1939 "y.tab.c"
+  case 18: /* declaratie: TIP ID ASSIGN LIT  */
+#line 224 "proiect.y"
+                              {
+                              //$1->dimensiune = 1;
+                              structDefinita((yyvsp[-3].tip)->nume);
+                              struct tip_t *tip_expr=initTip_t("char");
+                              tipuriEgale(tip_expr, (yyvsp[-3].tip));
+                              (yyval.param_t) = initTipParam((yyvsp[-3].tip),(yyvsp[-2].strval),0);
+                              }
+#line 1821 "y.tab.c"
     break;
 
-  case 72: /* op_list: operation  */
-#line 397 "proiect.y"
-                    {(yyval.expresie) = 0;}
-#line 1945 "y.tab.c"
+  case 19: /* declaratie: CONST TIP ID ASSIGN LIT  */
+#line 231 "proiect.y"
+                                    {
+                              structDefinita((yyvsp[-3].tip)->nume);                              
+                              //$1->dimensiune = 1;
+                              struct tip_t *tip_expr=initTip_t("char");
+                              tipuriEgale(tip_expr, (yyvsp[-3].tip));
+                              (yyval.param_t) = initTipParam((yyvsp[-3].tip),(yyvsp[-2].strval),1);
+                              }
+#line 1833 "y.tab.c"
     break;
 
-  case 73: /* op_list: '(' op_list ')' operation  */
+  case 20: /* declaratie: TIP ID '[' ']' ASSIGN '{' lista_lit '}'  */
+#line 238 "proiect.y"
+                                                    {
+                              //$1->dimensiune = 1;
+                              structDefinita((yyvsp[-7].tip)->nume);
+                              struct tip_t *tip_expr=initTip_t("char");
+                              tipuriEgale(tip_expr, (yyvsp[-7].tip));
+                              (yyval.param_t) = initTipParam((yyvsp[-7].tip),(yyvsp[-6].strval),0);
+                              }
+#line 1845 "y.tab.c"
+    break;
+
+  case 21: /* declaratie: TIP ID ASSIGN '{' lista_lit '}'  */
+#line 245 "proiect.y"
+                                            {
+                              structDefinita((yyvsp[-5].tip)->nume);
+                              struct tip_t *tip_expr=initTip_t("string");
+                              tipuriEgale(tip_expr, (yyvsp[-5].tip));
+                              (yyval.param_t) = initTipParam((yyvsp[-5].tip),(yyvsp[-4].strval),0);
+                              }
+#line 1856 "y.tab.c"
+    break;
+
+  case 22: /* declaratie: TIP ID '[' NR ']' ASSIGN '{' lista_lit '}'  */
+#line 251 "proiect.y"
+                                                       {
+                              //$1->dimensiune = $4;
+                              structDefinita((yyvsp[-8].tip)->nume);
+                              struct tip_t *tip_expr=initTip_t("char");
+                              tipuriEgale(tip_expr, (yyvsp[-8].tip));
+                              (yyval.param_t) = initTipParam((yyvsp[-8].tip),(yyvsp[-7].strval),0);
+                              }
+#line 1868 "y.tab.c"
+    break;
+
+  case 23: /* declaratie: CONST TIP ID '[' NR ']' ASSIGN '{' lista_lit '}'  */
+#line 258 "proiect.y"
+                                                             {
+                              //$2->dimensiune = $5;
+                              structDefinita((yyvsp[-8].tip)->nume);
+                              struct tip_t *tip_expr=initTip_t("char");
+                              tipuriEgale(tip_expr, (yyvsp[-8].tip));
+                              (yyval.param_t) = initTipParam((yyvsp[-8].tip),(yyvsp[-7].strval),1);
+                              }
+#line 1880 "y.tab.c"
+    break;
+
+  case 24: /* declaratie: CONST TIP ID '[' ']' ASSIGN '{' lista_lit '}'  */
+#line 265 "proiect.y"
+                                                          {
+                              structDefinita((yyvsp[-7].tip)->nume);
+                              struct tip_t *tip_expr=initTip_t("char");
+                              tipuriEgale(tip_expr, (yyvsp[-7].tip));
+                              (yyval.param_t) = initTipParam((yyvsp[-7].tip),(yyvsp[-6].strval),1);
+                              }
+#line 1891 "y.tab.c"
+    break;
+
+  case 25: /* declaratie: CONST TIP ID ASSIGN '{' lista_lit '}'  */
+#line 271 "proiect.y"
+                                                  {
+                              structDefinita((yyvsp[-5].tip)->nume);
+                              struct tip_t *tip_expr=initTip_t("string");
+                              tipuriEgale(tip_expr, (yyvsp[-5].tip));
+                              (yyval.param_t) = initTipParam((yyvsp[-5].tip),(yyvsp[-4].strval),1);
+                              }
+#line 1902 "y.tab.c"
+    break;
+
+  case 26: /* declaratie: TIP ID  */
+#line 277 "proiect.y"
+                    {
+                    structDefinita((yyvsp[-1].tip)->nume);
+                    (yyval.param_t) = initTipParam((yyvsp[-1].tip),(yyvsp[0].strval),0);
+                    }
+#line 1911 "y.tab.c"
+    break;
+
+  case 27: /* declaratie: TIP ID ASSIGN NR  */
+#line 281 "proiect.y"
+                              {
+                              structDefinita((yyvsp[-3].tip)->nume);
+                              tipuriEgale((yyvsp[0].valnr)->tip, (yyvsp[-3].tip));
+                              (yyval.param_t) = initTipParam((yyvsp[-3].tip),(yyvsp[-2].strval),0);
+                              }
+#line 1921 "y.tab.c"
+    break;
+
+  case 28: /* declaratie: CONST TIP ID ASSIGN NR  */
+#line 286 "proiect.y"
+                                    {
+                              structDefinita((yyvsp[-3].tip)->nume);
+                              tipuriEgale((yyvsp[0].valnr)->tip, (yyvsp[-3].tip));
+                              (yyval.param_t) = initTipParam((yyvsp[-3].tip),(yyvsp[-2].strval),1);
+                              }
+#line 1931 "y.tab.c"
+    break;
+
+  case 29: /* declaratie: TIP ID '[' ']' ASSIGN '{' lista_nr '}'  */
+#line 292 "proiect.y"
+                                                   {
+                              structDefinita((yyvsp[-7].tip)->nume);
+                              tipuriEgale((yyvsp[-1].lista_nr_t)->tip,(yyvsp[-7].tip));
+                              (yyval.param_t) = initTipParam((yyvsp[-7].tip),(yyvsp[-6].strval),0);
+                              }
+#line 1941 "y.tab.c"
+    break;
+
+  case 30: /* declaratie: TIP ID '[' NR ']'  */
+#line 297 "proiect.y"
+                              {
+                              structDefinita((yyvsp[-4].tip)->nume);
+                              (yyval.param_t) = initTipParam((yyvsp[-4].tip),(yyvsp[-3].strval),0);
+                              //$$->numar[$$->tip->dimensiune] = $4; 
+                              //$$->tip->dimensiune += 1;
+                              }
+#line 1952 "y.tab.c"
+    break;
+
+  case 31: /* declaratie: TIP ID '[' NR ']' ASSIGN '{' lista_nr '}'  */
+#line 303 "proiect.y"
+                                                      {
+                              structDefinita((yyvsp[-8].tip)->nume);
+                              tipuriEgale((yyvsp[-8].tip), (yyvsp[-1].lista_nr_t)->tip);
+                              (yyval.param_t) = initTipParam((yyvsp[-8].tip),(yyvsp[-7].strval),0);
+                              //$$->numar[$$->tip->dimensiune] = $4; 
+                              //$$->tip->dimensiune += 1;
+                              }
+#line 1964 "y.tab.c"
+    break;
+
+  case 32: /* declaratie: CONST TIP ID '[' ']' ASSIGN '{' lista_nr '}'  */
+#line 310 "proiect.y"
+                                                         {
+                              structDefinita((yyvsp[-7].tip)->nume);
+                              tipuriEgale((yyvsp[-1].lista_nr_t)->tip, (yyvsp[-7].tip));
+                              (yyval.param_t) = initTipParam((yyvsp[-7].tip),(yyvsp[-6].strval),1);
+                              }
+#line 1974 "y.tab.c"
+    break;
+
+  case 33: /* declaratie: CONST TIP ID '[' NR ']' ASSIGN '{' lista_nr '}'  */
+#line 315 "proiect.y"
+                                                            {
+                              structDefinita((yyvsp[-8].tip)->nume);
+                              tipuriEgale((yyvsp[-1].lista_nr_t)->tip, (yyvsp[-8].tip));
+                              (yyval.param_t) = initTipParam((yyvsp[-8].tip),(yyvsp[-7].strval),1);
+                              //$$->numar[$$->tip->dimensiune] = $5; 
+                              //$$->tip->dimensiune += 1;
+                              }
+#line 1986 "y.tab.c"
+    break;
+
+  case 34: /* declaratie: TIP ID ASSIGN BVAL  */
+#line 322 "proiect.y"
+                               {
+                              structDefinita((yyvsp[-3].tip)->nume);
+                              struct tip_t *tip_expr=initTip_t("bool");
+                              tipuriEgale((yyvsp[-3].tip), tip_expr);
+                              (yyval.param_t) = initTipParam((yyvsp[-3].tip),(yyvsp[-2].strval),0);
+                              }
+#line 1997 "y.tab.c"
+    break;
+
+  case 35: /* declaratie: CONST TIP ID ASSIGN BVAL  */
+#line 328 "proiect.y"
+                                     {
+                              structDefinita((yyvsp[-3].tip)->nume);
+                              struct tip_t *tip_expr=initTip_t("bool");
+                              tipuriEgale((yyvsp[-3].tip), tip_expr);
+                              (yyval.param_t) = initTipParam((yyvsp[-3].tip),(yyvsp[-2].strval),1);
+                              }
+#line 2008 "y.tab.c"
+    break;
+
+  case 36: /* BVAL: TRU  */
+#line 335 "proiect.y"
+           { (yyval.vali)=1; }
+#line 2014 "y.tab.c"
+    break;
+
+  case 37: /* BVAL: FALS  */
+#line 336 "proiect.y"
+            { (yyval.vali)=0; }
+#line 2020 "y.tab.c"
+    break;
+
+  case 38: /* TIP: INT  */
+#line 338 "proiect.y"
+          { (yyval.tip)=initTip_t((yyvsp[0].strval)); }
+#line 2026 "y.tab.c"
+    break;
+
+  case 39: /* TIP: FLOAT  */
+#line 339 "proiect.y"
+            { (yyval.tip)=initTip_t((yyvsp[0].strval)); }
+#line 2032 "y.tab.c"
+    break;
+
+  case 40: /* TIP: CHAR  */
+#line 340 "proiect.y"
+           { (yyval.tip)=initTip_t((yyvsp[0].strval)); }
+#line 2038 "y.tab.c"
+    break;
+
+  case 41: /* TIP: STRING  */
+#line 341 "proiect.y"
+             { (yyval.tip)=initTip_t((yyvsp[0].strval)); }
+#line 2044 "y.tab.c"
+    break;
+
+  case 42: /* TIP: BOOL  */
+#line 342 "proiect.y"
+           { (yyval.tip)=initTip_t((yyvsp[0].strval)); }
+#line 2050 "y.tab.c"
+    break;
+
+  case 43: /* TIP: UTYPE ID  */
+#line 343 "proiect.y"
+               { isStruct((yyvsp[0].strval),NULL); (yyval.tip)=initTip_t((yyvsp[0].strval));}
+#line 2056 "y.tab.c"
+    break;
+
+  case 46: /* user_type: NEWTYPE ID '{' declaratii '}'  */
+#line 348 "proiect.y"
+                                          {
+                    insertStructTable((yyvsp[-3].strval), (yyvsp[-1].lista_param_t));
+                    structura_curenta = (yyvsp[-3].strval);
+                    insertVarListTable((yyvsp[-1].lista_param_t));
+                    structura_curenta = NULL;
+                }
+#line 2067 "y.tab.c"
+    break;
+
+  case 49: /* functie: declaratie_fct BGIN list END  */
+#line 358 "proiect.y"
+                                      { functie_curenta = NULL; tipuriEgale((yyvsp[-3].tip), (yyvsp[-1].tip));}
+#line 2073 "y.tab.c"
+    break;
+
+  case 50: /* declaratie_fct: TIP ID '(' lista_param ')'  */
+#line 360 "proiect.y"
+                                           {
+               structDefinita((yyvsp[-4].tip)->nume);
+               functie_curenta = (yyvsp[-3].strval); 
+               insertVarListTable((yyvsp[-1].lista_param_t));
+               insertFuncTable((yyvsp[-3].strval), (yyvsp[-4].tip), (yyvsp[-1].lista_param_t));
+               (yyval.tip)=(yyvsp[-4].tip);
+           }
+#line 2085 "y.tab.c"
+    break;
+
+  case 51: /* lista_param: param  */
+#line 368 "proiect.y"
+                    {(yyval.lista_param_t) = initTipListParam((yyvsp[0].param_t));}
+#line 2091 "y.tab.c"
+    break;
+
+  case 52: /* lista_param: lista_param ',' param  */
+#line 369 "proiect.y"
+                                    {
+                               (yyval.lista_param_t)=(yyvsp[-2].lista_param_t);
+                               while((yyvsp[-2].lista_param_t)->urmator)
+                                   (yyvsp[-2].lista_param_t)=(yyvsp[-2].lista_param_t)->urmator;
+                               (yyvsp[-2].lista_param_t)->urmator=initTipListParam((yyvsp[0].param_t));
+                             }
+#line 2102 "y.tab.c"
+    break;
+
+  case 53: /* param: TIP ID  */
+#line 376 "proiect.y"
+               { (yyval.param_t) = initTipParam((yyvsp[-1].tip),(yyvsp[0].strval),0); }
+#line 2108 "y.tab.c"
+    break;
+
+  case 54: /* param: CONST TIP ID  */
+#line 377 "proiect.y"
+                     {  (yyval.param_t) = initTipParam((yyvsp[-1].tip),(yyvsp[0].strval),1); }
+#line 2114 "y.tab.c"
+    break;
+
+  case 56: /* list: list statement  */
+#line 380 "proiect.y"
+                      {if((yyvsp[-1].tip) && (yyvsp[0].tip))tipuriEgale((yyvsp[-1].tip),(yyvsp[0].tip)); if((yyvsp[-1].tip)) (yyval.tip)=(yyvsp[-1].tip); else if((yyvsp[0].tip)) (yyval.tip)=(yyvsp[0].tip);}
+#line 2120 "y.tab.c"
+    break;
+
+  case 57: /* VAR: ID  */
+#line 382 "proiect.y"
+         {
+         /*if($1->dimensiune > 1){
+            printf("Incorect semantic!");
+            exit(0);
+         }*/
+         //de adaugat verificare daca nu e vector (nu am testat)
+         (yyval.v)=initVar((yyvsp[0].strval), -1, 0);
+         }
+#line 2133 "y.tab.c"
+    break;
+
+  case 58: /* VAR: ID '[' NR ']'  */
+#line 390 "proiect.y"
+                   {
+         //de adaugat verificare daca e vector (nu am testat)
+         /*if($1->dimensiune <= 1){
+            printf("Incorect semantic!");
+            exit(0);
+         }*/
+         (yyval.v)=initVar((yyvsp[-3].strval), (yyvsp[-1].valnr)->val, 0);
+         }
+#line 2146 "y.tab.c"
+    break;
+
+  case 59: /* VAR: ID '[' VAR ']'  */
 #line 398 "proiect.y"
-                                    {(yyval.expresie) = 0;}
-#line 1951 "y.tab.c"
+                    {
+         //de adaugat verificare daca e vector (nu am testat)
+         /*if($1->dimensiune > 1){
+            printf("Incorect semantic!");
+            exit(0);
+         }*/
+         struct tip_t *tip_expr=initTip_t("int");
+         tipuriEgale(tip_expr, tipVar((yyvsp[-1].v)));
+         (yyval.v)=initVar((yyvsp[-3].strval), 1, 0);
+         }
+#line 2161 "y.tab.c"
     break;
 
-  case 93: /* lista_nr: NR  */
-#line 424 "proiect.y"
-              {(yyval.expresie) = 0;}
-#line 1957 "y.tab.c"
+  case 60: /* VAR: ID '.' VAR  */
+#line 408 "proiect.y"
+                 {
+         //de adaugat verificare daca nu e vector (nu am testat)
+         /*if($1->dimensiune > 1){
+            printf("Incorect semantic!");
+            exit(0);
+         }*/
+          isStruct((yyvsp[-2].strval),(yyvsp[0].v));
+          (yyval.v)=initVar((yyvsp[-2].strval), -1, tipVar((yyvsp[0].v)));
+         }
+#line 2175 "y.tab.c"
     break;
 
-  case 95: /* lista_lit: LIT  */
-#line 427 "proiect.y"
-                {(yyval.expresie) = 0;}
-#line 1963 "y.tab.c"
+  case 61: /* VAR: ID '[' NR ']' '.' VAR  */
+#line 417 "proiect.y"
+                           {
+         //de adaugat verificare daca e vector (nu am testat)
+         /*if($1->dimensiune <= 1){
+            printf("Incorect semantic!");
+            exit(0);
+         }*/
+         isStruct((yyvsp[-5].strval),(yyvsp[0].v));
+         (yyval.v)=initVar((yyvsp[-5].strval), (yyvsp[-3].valnr)->val,tipVar((yyvsp[0].v)));
+         }
+#line 2189 "y.tab.c"
+    break;
+
+  case 62: /* VAR: ID '[' VAR ']' '.' VAR  */
+#line 426 "proiect.y"
+                            {
+         //de adaugat verificare daca e vector (nu am testat)
+         /*if($1->dimensiune > 1){
+            printf("Incorect semantic!");
+            exit(0);
+         }*/
+         isStruct((yyvsp[-5].strval),(yyvsp[0].v));
+         struct tip_t *tip_expr=initTip_t("int");
+         tipuriEgale(tip_expr, tipVar((yyvsp[-3].v)));
+         (yyval.v)=initVar((yyvsp[-5].strval), 1,tipVar((yyvsp[0].v)));
+         }
+#line 2205 "y.tab.c"
+    break;
+
+  case 63: /* statement: VAR NEWVAL VAR ';'  */
+#line 438 "proiect.y"
+                               {
+                         varDefinita((yyvsp[-1].v)->nume);
+                         varNotConst((yyvsp[-3].v)->nume);
+                         tipuriEgale(tipVar((yyvsp[-1].v)), tipVar((yyvsp[-3].v)));
+                         (yyval.tip)=NULL;
+                         }
+#line 2216 "y.tab.c"
+    break;
+
+  case 64: /* statement: VAR NEWVAL NR ';'  */
+#line 444 "proiect.y"
+                               {
+                         varNotConst((yyvsp[-3].v)->nume);
+                         tipuriEgale((yyvsp[-1].valnr)->tip, tipVar((yyvsp[-3].v)));
+                         (yyval.tip)=NULL;
+                         }
+#line 2226 "y.tab.c"
+    break;
+
+  case 65: /* statement: VAR NEWVAL lista_op ';'  */
+#line 449 "proiect.y"
+                                   {
+                              varNotConst((yyvsp[-3].v)->nume);
+                              tipuriEgale((yyvsp[-1].tip), tipVar((yyvsp[-3].v)));
+                              (yyval.tip)=NULL;
+                              }
+#line 2236 "y.tab.c"
+    break;
+
+  case 66: /* statement: VAR NEWVAL apel ';'  */
+#line 454 "proiect.y"
+                                {
+                                 varNotConst((yyvsp[-3].v)->nume);
+                                 tipuriEgale(tipVar((yyvsp[-3].v)), (yyvsp[-1].tip));
+                                 (yyval.tip)=NULL;
+                          }
+#line 2246 "y.tab.c"
+    break;
+
+  case 67: /* statement: VAR NEWVAL BVAL ';'  */
+#line 459 "proiect.y"
+                                {
+                                 varNotConst((yyvsp[-3].v)->nume);
+                                 struct tip_t *tip_expr=initTip_t("bool");
+                                 tipuriEgale(tipVar((yyvsp[-3].v)), tip_expr);    
+                                 (yyval.tip)=NULL;
+                          }
+#line 2257 "y.tab.c"
+    break;
+
+  case 68: /* statement: VAR NEWVAL lista_cond ';'  */
+#line 465 "proiect.y"
+                                      {
+                                 varNotConst((yyvsp[-3].v)->nume);
+                                 struct tip_t *tip_expr=initTip_t("bool");
+                                 tipuriEgale(tipVar((yyvsp[-3].v)), tip_expr);    
+                                 (yyval.tip)=NULL;                           
+                          }
+#line 2268 "y.tab.c"
+    break;
+
+  case 69: /* statement: declaratie ';'  */
+#line 471 "proiect.y"
+                           { 
+                      if((yyvsp[-1].param_t)->cons) 
+                          insertConstTable((yyvsp[-1].param_t)->nume,(yyvsp[-1].param_t)->tip); 
+                      else
+                           insertVarTable((yyvsp[-1].param_t)->nume,(yyvsp[-1].param_t)->tip);
+                      (yyval.tip)=NULL;
+            }
+#line 2280 "y.tab.c"
+    break;
+
+  case 70: /* statement: IF '(' lista_cond ')' '{' list '}'  */
+#line 478 "proiect.y"
+                                               {(yyval.tip)=(yyvsp[-1].tip);}
+#line 2286 "y.tab.c"
+    break;
+
+  case 71: /* statement: IF '(' lista_cond ')' '{' list '}' ELSE '{' list '}'  */
+#line 479 "proiect.y"
+                                                                 {if((yyvsp[-5].tip)) (yyval.tip)=(yyvsp[-5].tip); else if((yyvsp[-1].tip)) (yyval.tip)=(yyvsp[-1].tip); else (yyval.tip)=NULL;}
+#line 2292 "y.tab.c"
+    break;
+
+  case 72: /* statement: FOR '(' statement '|' lista_cond '|' statement ')' '{' list '}'  */
+#line 480 "proiect.y"
+                                                                            {(yyval.tip)=(yyvsp[-1].tip);}
+#line 2298 "y.tab.c"
+    break;
+
+  case 73: /* statement: FOR '(' statement '|' lista_cond '|' statement ')' statement  */
+#line 481 "proiect.y"
+                                                                         {(yyval.tip)=(yyvsp[0].tip);}
+#line 2304 "y.tab.c"
+    break;
+
+  case 74: /* statement: WHILE '(' lista_cond ')' '{' list '}'  */
+#line 482 "proiect.y"
+                                                  {(yyval.tip)=(yyvsp[-1].tip);}
+#line 2310 "y.tab.c"
+    break;
+
+  case 75: /* statement: WHILE '(' lista_cond ')' statement  */
+#line 483 "proiect.y"
+                                               {(yyval.tip)=(yyvsp[0].tip);}
+#line 2316 "y.tab.c"
+    break;
+
+  case 76: /* statement: EVAL '(' VAR ')' ';'  */
+#line 484 "proiect.y"
+                                 {(yyval.tip)=NULL;}
+#line 2322 "y.tab.c"
+    break;
+
+  case 77: /* statement: EVAL '(' NR ')' ';'  */
+#line 485 "proiect.y"
+                                {if (corect){
+                                                 printf("Rezultatul expresiei din eval este %f\n", (yyvsp[-2].valnr)->val);
+                                             }
+                                             else {printf("Valorile nu sunt de tip int\n");} (yyval.tip)=NULL;}
+#line 2331 "y.tab.c"
+    break;
+
+  case 78: /* statement: EVAL '(' lista_op ')' ';'  */
+#line 489 "proiect.y"
+                                      {(yyval.tip)=NULL;}
+#line 2337 "y.tab.c"
+    break;
+
+  case 79: /* statement: TYPEOF '(' VAR ')' ';'  */
+#line 490 "proiect.y"
+                                    {
+                                    (yyval.tip)=tipVar((yyvsp[-2].v));
+                                    printf("Tipul variabilei este %s",tipVar((yyvsp[-2].v))->nume);
+                                    }
+#line 2346 "y.tab.c"
+    break;
+
+  case 80: /* statement: TYPEOF '(' NR ')' ';'  */
+#line 494 "proiect.y"
+                                  { //nu inteleg la ce faci typeof
+                                  }
+#line 2353 "y.tab.c"
+    break;
+
+  case 81: /* statement: TYPEOF '(' LIT ')' ';'  */
+#line 496 "proiect.y"
+                                   { //identic ca mai sus
+                                    }
+#line 2360 "y.tab.c"
+    break;
+
+  case 82: /* statement: RET NR ';'  */
+#line 498 "proiect.y"
+                       { (yyval.tip)=(yyvsp[-1].valnr)->tip; }
+#line 2366 "y.tab.c"
+    break;
+
+  case 83: /* statement: RET LIT ';'  */
+#line 499 "proiect.y"
+                       { struct tip_t *tip_expr=initTip_t("char"); (yyval.tip)=tip_expr; }
+#line 2372 "y.tab.c"
+    break;
+
+  case 84: /* statement: RET BVAL ';'  */
+#line 500 "proiect.y"
+                         { struct tip_t *tip_expr=initTip_t("bool"); (yyval.tip)=tip_expr; }
+#line 2378 "y.tab.c"
+    break;
+
+  case 85: /* statement: RET VAR ';'  */
+#line 501 "proiect.y"
+                        { varDefinita((yyvsp[-1].v)->nume); (yyval.tip)=tipVar((yyvsp[-1].v));}
+#line 2384 "y.tab.c"
+    break;
+
+  case 89: /* lista_op: VAR operatie  */
+#line 507 "proiect.y"
+                        { varDefinita((yyvsp[-1].v)->nume); tipuriEgale((yyvsp[0].tip), tipVar((yyvsp[-1].v))); (yyval.tip)=(yyvsp[0].tip);}
+#line 2390 "y.tab.c"
+    break;
+
+  case 90: /* lista_op: NR operatie  */
+#line 508 "proiect.y"
+                       {tipuriEgale((yyvsp[0].tip), initTip_t("float")); (yyval.tip)=(yyvsp[0].tip);}
+#line 2396 "y.tab.c"
+    break;
+
+  case 91: /* lista_op: apel operatie  */
+#line 509 "proiect.y"
+                          { tipuriEgale((yyvsp[0].tip), (yyvsp[-1].tip)); }
+#line 2402 "y.tab.c"
+    break;
+
+  case 92: /* lista_op: lista_op operatie  */
+#line 510 "proiect.y"
+                             {tipuriEgale((yyvsp[-1].tip),(yyvsp[0].tip));}
+#line 2408 "y.tab.c"
+    break;
+
+  case 93: /* lista_op: '(' lista_op ')' operatie  */
+#line 511 "proiect.y"
+                                     {tipuriEgale((yyvsp[-2].tip),(yyvsp[0].tip)); (yyval.tip)=(yyvsp[-2].tip);}
+#line 2414 "y.tab.c"
+    break;
+
+  case 94: /* operatie: OP VAR  */
+#line 513 "proiect.y"
+                  {varDefinita((yyvsp[0].v)->nume);(yyval.tip)=tipVar((yyvsp[0].v));}
+#line 2420 "y.tab.c"
+    break;
+
+  case 95: /* operatie: OP NR  */
+#line 514 "proiect.y"
+                 {(yyval.tip)=(yyvsp[0].valnr)->tip;}
+#line 2426 "y.tab.c"
+    break;
+
+  case 96: /* operatie: OP apel  */
+#line 515 "proiect.y"
+                   {(yyval.tip)=(yyvsp[0].tip);}
+#line 2432 "y.tab.c"
+    break;
+
+  case 101: /* apel: ID '(' lista_arg ')'  */
+#line 522 "proiect.y"
+                            {
+                         funDefinita((yyvsp[-3].strval),(yyvsp[-1].lista_param_t));
+                         (yyval.tip)=tipRetFun((yyvsp[-3].strval));
+                         }
+#line 2441 "y.tab.c"
+    break;
+
+  case 102: /* lista_arg: arg  */
+#line 527 "proiect.y"
+                {(yyval.lista_param_t) = initTipListParam((yyvsp[0].param_t));}
+#line 2447 "y.tab.c"
+    break;
+
+  case 103: /* lista_arg: lista_arg ',' arg  */
+#line 528 "proiect.y"
+                              {
+                               (yyval.lista_param_t)=(yyvsp[-2].lista_param_t);
+                               while((yyvsp[-2].lista_param_t)->urmator)
+                                   (yyvsp[-2].lista_param_t)=(yyvsp[-2].lista_param_t)->urmator;
+                               (yyvsp[-2].lista_param_t)->urmator=initTipListParam((yyvsp[0].param_t));
+                             }
+#line 2458 "y.tab.c"
+    break;
+
+  case 104: /* arg: VAR  */
+#line 535 "proiect.y"
+          { 
+            varNotConst((yyvsp[0].v)->nume);
+            varDefinita((yyvsp[0].v)->nume); 
+            (yyval.param_t) = initTipParam(tipVar((yyvsp[0].v)),(yyvsp[0].v)->nume,0);
+            }
+#line 2468 "y.tab.c"
+    break;
+
+  case 105: /* arg: VAR NEWVAL VAR  */
+#line 540 "proiect.y"
+                     {
+                   varNotConst((yyvsp[-2].v)->nume);
+                   varDefinita((yyvsp[0].v)->nume);
+                   tipuriEgale(tipVar((yyvsp[0].v)), tipVar((yyvsp[-2].v))); 
+                   (yyval.param_t) = initTipParam(tipVar((yyvsp[-2].v)),(yyvsp[-2].v)->nume,0);
+               }
+#line 2479 "y.tab.c"
+    break;
+
+  case 106: /* arg: VAR NEWVAL NR  */
+#line 546 "proiect.y"
+                    {
+                   varNotConst((yyvsp[-2].v)->nume);
+                   tipuriEgale((yyvsp[0].valnr)->tip, tipVar((yyvsp[-2].v)));
+                   (yyval.param_t) = initTipParam(tipVar((yyvsp[-2].v)),(yyvsp[-2].v)->nume,0);
+               }
+#line 2489 "y.tab.c"
+    break;
+
+  case 107: /* arg: apel  */
+#line 551 "proiect.y"
+           { (yyval.param_t) = initTipParam((yyvsp[0].tip),"functie",0); }
+#line 2495 "y.tab.c"
+    break;
+
+  case 108: /* lista_cond: VAR cond  */
+#line 553 "proiect.y"
+                      { varDefinita((yyvsp[-1].v)->nume); tipuriEgale((yyvsp[0].tip), tipVar((yyvsp[-1].v))); }
+#line 2501 "y.tab.c"
+    break;
+
+  case 109: /* lista_cond: NR cond  */
+#line 554 "proiect.y"
+                     { tipuriEgale((yyvsp[-1].valnr)->tip, (yyvsp[0].tip)); }
+#line 2507 "y.tab.c"
+    break;
+
+  case 110: /* lista_cond: BVAL cond  */
+#line 555 "proiect.y"
+                       { struct tip_t *tip_expr=initTip_t("bool"); tipuriEgale(tip_expr, (yyvsp[0].tip)); }
+#line 2513 "y.tab.c"
+    break;
+
+  case 111: /* lista_cond: LIT cond  */
+#line 556 "proiect.y"
+                      { struct tip_t *tip_expr=initTip_t("char"); tipuriEgale(tip_expr, (yyvsp[0].tip)); }
+#line 2519 "y.tab.c"
+    break;
+
+  case 112: /* lista_cond: apel cond  */
+#line 557 "proiect.y"
+                       { tipuriEgale((yyvsp[0].tip), (yyvsp[-1].tip)); }
+#line 2525 "y.tab.c"
+    break;
+
+  case 113: /* lista_cond: lista_cond cond  */
+#line 558 "proiect.y"
+                             {tipuriEgale((yyvsp[-1].tip),(yyvsp[0].tip));}
+#line 2531 "y.tab.c"
+    break;
+
+  case 114: /* lista_cond: '(' lista_cond ')' cond  */
+#line 559 "proiect.y"
+                                     {tipuriEgale((yyvsp[-2].tip),(yyvsp[0].tip)); (yyval.tip)=(yyvsp[-2].tip);}
+#line 2537 "y.tab.c"
+    break;
+
+  case 115: /* cond: OP_C VAR  */
+#line 561 "proiect.y"
+                {varDefinita((yyvsp[0].v)->nume); (yyval.tip)=tipVar((yyvsp[0].v));}
+#line 2543 "y.tab.c"
+    break;
+
+  case 116: /* cond: OP_C NR  */
+#line 562 "proiect.y"
+               { (yyval.tip)=(yyvsp[0].valnr)->tip; }
+#line 2549 "y.tab.c"
+    break;
+
+  case 117: /* cond: OP_C BVAL  */
+#line 563 "proiect.y"
+                 { struct tip_t *tip_expr=initTip_t("bool"); (yyval.tip) = tip_expr;}
+#line 2555 "y.tab.c"
+    break;
+
+  case 118: /* cond: OP_C LIT  */
+#line 564 "proiect.y"
+                { struct tip_t *tip_expr=initTip_t("char"); (yyval.tip) = tip_expr;}
+#line 2561 "y.tab.c"
+    break;
+
+  case 126: /* NR: NRI  */
+#line 574 "proiect.y"
+        { (yyval.valnr)=InitNr("int",(yyvsp[0].vali));}
+#line 2567 "y.tab.c"
+    break;
+
+  case 127: /* NR: MINUS NRI  */
+#line 575 "proiect.y"
+              { (yyval.valnr)=InitNr("int",-(yyvsp[0].vali));}
+#line 2573 "y.tab.c"
+    break;
+
+  case 128: /* NR: MINUS NRF  */
+#line 576 "proiect.y"
+              {(yyval.valnr)=InitNr("float",-(yyvsp[0].valf));}
+#line 2579 "y.tab.c"
+    break;
+
+  case 129: /* NR: NRF  */
+#line 577 "proiect.y"
+        {(yyval.valnr)=InitNr("float",(yyvsp[0].valf));}
+#line 2585 "y.tab.c"
+    break;
+
+  case 130: /* lista_nr: NR  */
+#line 579 "proiect.y"
+              {(yyval.lista_nr_t) = initTipListNr((yyvsp[0].valnr));}
+#line 2591 "y.tab.c"
+    break;
+
+  case 131: /* lista_nr: lista_nr ',' NR  */
+#line 580 "proiect.y"
+                             {
+                               tipuriEgale((yyvsp[-2].lista_nr_t)->tip,(yyvsp[0].valnr)->tip);
+                               (yyval.lista_nr_t)=initTipListNr((yyvsp[0].valnr));
+                               (yyvsp[-2].lista_nr_t)->urmator=(yyval.lista_nr_t);
+                             }
+#line 2601 "y.tab.c"
+    break;
+
+  case 132: /* lista_lit: LIT  */
+#line 586 "proiect.y"
+                 {(yyval.lista_lit_t) = initTipListLit((yyvsp[0].strval));}
+#line 2607 "y.tab.c"
+    break;
+
+  case 133: /* lista_lit: lista_lit ',' LIT  */
+#line 587 "proiect.y"
+                               {
+                               (yyval.lista_lit_t)=initTipListLit((yyvsp[0].strval));
+                               (yyvsp[-2].lista_lit_t)->urmator=(yyval.lista_lit_t);
+                             }
+#line 2616 "y.tab.c"
     break;
 
 
-#line 1967 "y.tab.c"
+#line 2620 "y.tab.c"
 
       default: break;
     }
@@ -2156,15 +2809,13 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 434 "proiect.y"
+#line 596 "proiect.y"
 
 int yyerror(char * s){
 printf("eroare: %s la linia:%d\n",s,yylineno);
 }
-
 void checkTable(char* nume){
-    int i;
-    for(i = 0; i < nrSimboluri; i++){
+    for(int i = 0; i < nrSimboluri; i++){
         if (((structura_curenta == NULL && SymbolTable[i].structura == NULL) ||
              (structura_curenta != NULL && SymbolTable[i].structura != NULL &&
               strcmp(structura_curenta, SymbolTable[i].structura) == 0)) &&
@@ -2180,35 +2831,70 @@ void checkTable(char* nume){
                 printf("din structura %s ", structura_curenta);
             printf("deja există\n");
             corect = 0;
+            exit(0);
             break;
         }
     }
 }
-
-void insertVarTable(char *nume, struct tip_t *tip){
+void insertVarListTable(struct lista_param_t *var){
+    while(var!=NULL)
+    {
+        if(var->param->cons)
+            insertConstTable(var->param->nume,var->param->tip);
+        else
+            insertVarTable(var->param->nume,var->param->tip);
+        var=var->urmator;
+    }
+}
+void insertConstTable(char *nume, struct tip_t *tip){
     checkTable(nume);
-    SymbolTable[nrSimboluri].tip_simbol = SIMBOL_VARIABILA;
-    SymbolTable[nrSimboluri].nume = nume;
+    
+    SymbolTable[nrSimboluri].tip_simbol = SIMBOL_CONST;
+    SymbolTable[nrSimboluri].nume = (char*) malloc(sizeof(char)*(strlen(nume)+1)); 
+    strcpy(SymbolTable[nrSimboluri].nume,nume);
     SymbolTable[nrSimboluri].functie = functie_curenta;
     SymbolTable[nrSimboluri].structura = structura_curenta;
     SymbolTable[nrSimboluri].tip = tip;
-
+    nrSimboluri++;
+}
+void insertVarTable(char *nume, struct tip_t *tip){
+    checkTable(nume);
+    SymbolTable[nrSimboluri].tip_simbol = SIMBOL_VARIABILA;
+    SymbolTable[nrSimboluri].nume = (char*) malloc(sizeof(char)*(strlen(nume)+1)); 
+    strcpy(SymbolTable[nrSimboluri].nume,nume);
+    SymbolTable[nrSimboluri].functie = functie_curenta;
+    SymbolTable[nrSimboluri].structura = structura_curenta;
+    SymbolTable[nrSimboluri].tip = tip;
     nrSimboluri++;
 }
 
 void insertFuncTable(char *nume, struct tip_t *ret, struct lista_param_t *param){
     checkTable(nume);
     SymbolTable[nrSimboluri].tip_simbol = SIMBOL_FUNCTIE;
-    SymbolTable[nrSimboluri].nume = nume;
+    SymbolTable[nrSimboluri].nume = (char*) malloc(sizeof(char)*(strlen(nume)+1)); 
+    strcpy(SymbolTable[nrSimboluri].nume,nume);
+    SymbolTable[nrSimboluri].functie = functie_curenta;
     SymbolTable[nrSimboluri].structura = structura_curenta;
     SymbolTable[nrSimboluri].tip = ret;
     SymbolTable[nrSimboluri].param = param;
     nrSimboluri++;
 }
+void insertStructTable(char *nume, struct lista_param_t *param)
+{
+    checkTable(nume);
+    SymbolTable[nrSimboluri].tip_simbol = SIMBOL_STRUCTURA;
+    SymbolTable[nrSimboluri].nume = (char*) malloc(sizeof(char)*(strlen(nume)+1)); 
+    strcpy(SymbolTable[nrSimboluri].nume,nume);
+    SymbolTable[nrSimboluri].functie = functie_curenta;
+    SymbolTable[nrSimboluri].structura = structura_curenta;
+    SymbolTable[nrSimboluri].param = param;
+    nrSimboluri++;
+}
+
 void printTip(FILE *f, struct tip_t *tip) {
     if (tip != NULL) {
         fprintf(f, "%s", tip->nume);
-        for (int j = 0; j < tip->dimensiune; ++j)
+        for (int j = 0; j < tip->dimensiune; ++j) //nu inteleg dimensiune si nr..later
             fprintf(f, "[%d]", tip->numar[j]);
     } 
     else{
@@ -2216,117 +2902,137 @@ void printTip(FILE *f, struct tip_t *tip) {
     }
 }
 
+
 void printTable(){
   fisier_tabela = fopen("symbol_table.txt", "w");
+  fisier_functii = fopen("symbol_table_functions.txt", "w");
   for (int i = 0; i < nrSimboluri; ++i) {
-      if (SymbolTable[i].tip_simbol == SIMBOL_VARIABILA) {
+      if (SymbolTable[i].tip_simbol == SIMBOL_VARIABILA || SymbolTable[i].tip_simbol == SIMBOL_CONST) {
         fprintf(fisier_tabela, "%s\t", SymbolTable[i].nume);
         printTip(fisier_tabela, SymbolTable[i].tip);
         fprintf(fisier_tabela, "\t");
-        if (SymbolTable[i].structura == NULL &&
-            SymbolTable[i].functie == NULL)
+        if ( SymbolTable[i].functie == NULL)
             fprintf(fisier_tabela, "globala\t");
-        if (SymbolTable[i].structura != NULL &&
-            SymbolTable[i].functie == NULL)
-            fprintf(fisier_tabela, "membru\t");
         if (SymbolTable[i].functie != NULL)
+        {   
             fprintf(fisier_tabela, "locala\t");
-        if (SymbolTable[i].structura != NULL)
-          fprintf(fisier_tabela, "în struct %s\t", SymbolTable[i].structura);
-        if (SymbolTable[i].functie != NULL)
-          fprintf(fisier_tabela, "în func %s\t", SymbolTable[i].functie);
-        fprintf(fisier_tabela, "\n");
+            fprintf(fisier_tabela, "în func %s\t", SymbolTable[i].functie);
+            fprintf(fisier_tabela, "\n");
+        }
       } 
       else if (SymbolTable[i].tip_simbol == SIMBOL_FUNCTIE) {
-          fprintf(fisier_tabela, "%s\t", SymbolTable[i].nume);
+          fprintf(fisier_functii, "%s\t", SymbolTable[i].nume);
           if (SymbolTable[i].tip != NULL)
-              fprintf(fisier_tabela, "%s", SymbolTable[i].tip->nume);
+              fprintf(fisier_functii, "%s", SymbolTable[i].tip->nume);
           else
-              fprintf(fisier_tabela, "void");
-          fprintf(fisier_tabela, "(");
+              fprintf(fisier_functii, "void");
+          fprintf(fisier_functii, "(");
           for (struct lista_param_t *j = SymbolTable[i].param; j != NULL; j = j->urmator) {
-              printTip(fisier_tabela, j->tip);
+              printTip(fisier_functii, j->param->tip);
               if (j->urmator != NULL)
-                  fprintf(fisier_tabela, ", ");
+                  fprintf(fisier_functii, ", ");
           }
-          fprintf(fisier_tabela, ")\t");
-          if (SymbolTable[i].structura != NULL)
-              fprintf(fisier_tabela, "metodă\tîn struct %s\t", SymbolTable[i].structura);
-          else
-              fprintf(fisier_tabela, "func\t");
-          fprintf(fisier_tabela, "\n");
-      } else {
-          fprintf(fisier_tabela, "%s\tstruct\n", SymbolTable[i].nume);
-      }
+          fprintf(fisier_functii, ")\t");
+          fprintf(fisier_functii, "\n");
+      } 
+
   }
   fclose(fisier_tabela);
 }
 
-void varDefinita(char *nume) {
+bool varDefinita(char *nume) {
+    bool var=0;
     for (int i = 0; i < nrSimboluri; ++i) {
-        if (SymbolTable[i].tip_simbol == SIMBOL_VARIABILA && strcmp(SymbolTable[i].nume, nume) == 0) {
+        if (strcmp(SymbolTable[i].nume, nume) == 0) {
+            if(SymbolTable[i].tip_simbol == SIMBOL_VARIABILA) 
+                var=1;
+            else if (SymbolTable[i].tip_simbol == SIMBOL_CONST)
+                var=0;
+            else continue;
             if (SymbolTable[i].functie == NULL && SymbolTable[i].structura == NULL)
-                return;
+                return var;
             if (SymbolTable[i].functie == NULL && SymbolTable[i].structura != NULL &&
                 structura_curenta != NULL &&
                 strcmp(SymbolTable[i].structura, structura_curenta) == 0)
-                return;
+                return var;
             if (SymbolTable[i].functie != NULL && SymbolTable[i].structura == NULL &&
                 structura_curenta == NULL && functie_curenta != NULL &&
                 structura_curenta == NULL && strcmp(SymbolTable[i].functie, functie_curenta) == 0)
-                return;
+                return var;
             if (SymbolTable[i].functie != NULL && SymbolTable[i].structura != NULL &&
                 functie_curenta != NULL && structura_curenta != NULL &&
                 strcmp(SymbolTable[i].functie, functie_curenta) == 0 &&
                 strcmp(SymbolTable[i].structura, structura_curenta) == 0)
-                return;
+                return var;
         } else if (functie_curenta != NULL &&
                    SymbolTable[i].tip_simbol == SIMBOL_FUNCTIE &&
                    strcmp(SymbolTable[i].nume, functie_curenta) == 0) {
             for (struct lista_param_t *j = SymbolTable[i].param; j != NULL; j = j->urmator) {
-                if (strcmp(j->nume, nume) == 0)
-                    return;
+                if (strcmp(j->param->nume, nume) == 0)
+                    return var;
             }
         }
     }
     corect = 0;
     printf("Variabila %s nu a fost definită\n", nume);
+    exit(0);
+    return 0;
 }
 
-void funDefinita(char *nume) {
+
+void funDefinita(char *nume, struct lista_param_t *arg) {
     for (int i = 0; i < nrSimboluri; ++i) {
         if (SymbolTable[i].tip_simbol == SIMBOL_FUNCTIE && strcmp(SymbolTable[i].nume, nume) == 0) {
-            if (SymbolTable[i].structura != NULL && structura_curenta != NULL &&
-                strcmp(SymbolTable[i].structura, structura_curenta) == 0)
-                return;
-            if (SymbolTable[i].structura == NULL)
-                return;
+            if ((SymbolTable[i].structura != NULL && structura_curenta != NULL &&
+                strcmp(SymbolTable[i].structura, structura_curenta) == 0)||SymbolTable[i].structura == NULL)
+                 if(!apelCorect(arg,SymbolTable[i].param))
+                     printf("În apelul funcției %s numărul de argumente este greșit\n", nume);
+                 else
+                     return;
+                     
         }
     }
     corect = 0;
     printf("Funcția %s nu a fost definită\n", nume);
+    exit(0);
 }
-
-void structDefinita(char *nume) {
+bool apelCorect(struct lista_param_t * arg, struct lista_param_t *param) {
+    while (param != NULL && arg != NULL) {
+        tipuriEgale(arg->param->tip, param->param->tip);
+        param = param->urmator;
+        arg = arg->urmator;
+    }
+    if (param != NULL || arg != NULL) {
+        corect = 0;
+        exit(0);
+        return 0;
+    }
+    return 1;
+}
+bool structDefinita(char *nume) {
     if (strcmp(nume, "int") == 0 ||
         strcmp(nume, "float") == 0 ||
         strcmp(nume, "char") == 0 ||
         strcmp(nume, "string") == 0 ||
         strcmp(nume, "bool") == 0)
-        return;
+        return 0 ;
     for (int i = 0; i < nrSimboluri; ++i) {
         if (SymbolTable[i].tip_simbol == SIMBOL_STRUCTURA && strcmp(SymbolTable[i].nume, nume) == 0) {
-            return;
+            return 1;
         }
     }
     corect = 0;
     printf("Structura %s nu a fost definită\n", nume);
+    exit(0);
+    return 0;
 }
 
-struct tip_t *tipVar(struct var *v) { //trebuie adaptata la struct var
+struct tip_t *tipVar(struct var *v) {
+    if(v->param)
+        return v->param;
     struct tip_t *rezultat = NULL;
     for (int i = 0; i < nrSimboluri; ++i) {
-        if (SymbolTable[i].tip_simbol == SIMBOL_VARIABILA && strcmp(SymbolTable[i].nume, v->nume) == 0) {
+        if ((SymbolTable[i].tip_simbol == SIMBOL_VARIABILA || SymbolTable[i].tip_simbol == SIMBOL_CONST)  && strcmp(SymbolTable[i].nume, v->nume) == 0) {
             if (SymbolTable[i].functie == NULL && SymbolTable[i].structura == NULL)
                 rezultat = SymbolTable[i].tip;
             if (SymbolTable[i].functie == NULL && SymbolTable[i].structura != NULL &&
@@ -2346,8 +3052,8 @@ struct tip_t *tipVar(struct var *v) { //trebuie adaptata la struct var
                    SymbolTable[i].tip_simbol == SIMBOL_FUNCTIE &&
                    strcmp(SymbolTable[i].nume, functie_curenta) == 0) {
             for (struct lista_param_t *j = SymbolTable[i].param; j != NULL; j = j->urmator) {
-                if (strcmp(j->nume, v->nume) == 0)
-                    rezultat = j->tip;
+                if (strcmp(j->param->nume, v->nume) == 0)
+                    rezultat = j->param->tip;
             }
         }
     }
@@ -2368,35 +3074,14 @@ struct tip_t *tipRetFun(char *nume) {
     return rezultat;
 }
 
-struct tip_t *tipExpr(struct expresie *expr) {
-    struct tip_t *tip;
-    if (expr->tip_expr == EXPRESIE_NUM) {
-        tip->nume = "int";
-        tip->dimensiune = 0;
-    } else if (expr->tip_expr == EXPRESIE_BOOL) {
-        tip->nume = "bool";
-        tip->dimensiune = 0;
-    } else if (expr->tip_expr == EXPRESIE_STR) {
-        tip->nume = "string";
-        tip->dimensiune = 0;
-    } else if (expr->tip_expr == EXPRESIE_NEW) {
-        tip->nume = expr->new;
-        tip->dimensiune = 0;
-    } else if (expr->tip_expr == EXPRESIE_APEL) {
-        tip = tipRetFun(expr->apel->fun);
-    } else if (expr->tip_expr == EXPRESIE_VAR) {
-        tip = tipVar(expr->var);
-    }
-    return tip;
-}
-
 void tipuriEgale(struct tip_t *stanga, struct tip_t *dreapta) {
     int egale = 1;
     if(stanga != NULL && dreapta != NULL){
         if(strcmp(stanga->nume, dreapta->nume)){
             egale = 0;
         }
-    } else {
+    } 
+    else {
         egale = 0;
     }
     if (egale == 0) {
@@ -2405,52 +3090,124 @@ void tipuriEgale(struct tip_t *stanga, struct tip_t *dreapta) {
         printf(" nu este compatibil cu ");
         printTip(stdout, dreapta);
         printf("\n");
+        exit(0);
     }
 }
-
-void apelCorect(struct expresie_apel *apel) {
-    struct lista_param_t *param = NULL;
-
-    for (int i = 0; i < nrSimboluri; ++i) {
-        if (SymbolTable[i].tip_simbol == SIMBOL_FUNCTIE && strcmp(SymbolTable[i].nume, apel->fun) == 0) {
-            if (SymbolTable[i].structura != NULL && structura_curenta != NULL &&
-                strcmp(SymbolTable[i].structura, structura_curenta) == 0) {
-                param = SymbolTable[i].param;
-                break;
+void varNotConst (char *nume){
+    corect = 0;
+    if(varDefinita(nume)==0 && corect)
+    {
+        corect=0;
+        printf("Valoarea lui %s nu poate fi schimbata\n", nume);
+        exit(0);
+    } 
+}
+void isStruct(char * nume, struct var* comp){
+    char * name;
+    if(comp)
+    {
+        struct var* temp = initVar(nume, -1,0);
+        struct tip_t* tip = tipVar(temp);
+        name=tip->nume;
+    }
+    else
+    {
+        name=nume;
+    }
+    if(structDefinita(name))
+    {
+        if(comp)
+        {
+            structura_curenta=name;
+            varDefinita(comp->nume);
+            if(!corect)
+            {
+                printf("Variabila %s nu are membrul %s\n", nume, comp->nume);
+                return;
             }
-            if (SymbolTable[i].structura == NULL) {
-                param = SymbolTable[i].param;
-                break;
-            }
+            return;
+        }
+        else return;
+    }
+    else
+    {
+        if(comp)
+        {
+            corect=0;
+            printf("Variabila %s nu are membrii. Nu e usertype\n", nume);
+            exit(0);
+            return;
+        }
+        else
+        {
+            corect=0;
+            printf("%s nu e usertype\n", nume);
+            exit(0);
+            return;
         }
     }
 
-    struct lista_expresii *arg = apel->arg;
-
-    while (param != NULL && arg != NULL) {
-        struct tip_t *tip_expr = tipExpr(arg->expr);
-        tipuriEgale(tip_expr, param->tip);
-        param = param->urmator;
-        arg = arg->urmator;
-    }
-    if (param != NULL || arg != NULL) {
-        corect = 0;
-        printf("În apelul funcției %s numărul de argumente este greșit\n", apel->fun);
-    }
 }
 struct tip_t * initTip_t(char * val)
 {
     struct tip_t* expr = (struct tip_t*)malloc(sizeof(struct tip_t));
+    expr->nume = (char*) malloc(sizeof(char)*(strlen(val)+1)); 
     strcpy(expr->nume, val);
     expr->dimensiune=0;
     expr->numar[0]=0;
     return expr;
 }
-struct var * initVar(char * val, int index)
+struct var * initVar(char * val, int index, struct tip_t* param)
 {
     struct var* expr = (struct var*)malloc(sizeof(struct var));
+    expr->nume = (char*) malloc(sizeof(char)*(strlen(val)+1)); 
     strcpy(expr->nume,val);
     expr->index=index;
+    expr->param = (struct tip_t*)malloc(sizeof(param));
+    expr->param = param;
+    return expr;
+}
+struct param_t *initTipParam(struct tip_t *tip, char *val, bool cons)
+{
+    struct param_t* expr = (struct param_t*)malloc(sizeof(struct param_t));
+    expr->nume = (char*) malloc(sizeof(char)*(strlen(val)+1)); 
+    strcpy(expr->nume,val);
+    expr->tip = (struct tip_t*)malloc(sizeof(tip));
+    expr->tip=tip;
+    expr->cons=cons;
+    return expr;
+}
+struct lista_nr_t *initTipListNr(struct valnr_t * val)
+{
+    struct lista_nr_t* expr = (struct lista_nr_t*)malloc(sizeof(struct lista_nr_t));
+    expr->urmator=NULL;
+    expr->nr=val->val;
+    expr->tip = (struct tip_t*)malloc(sizeof(val->tip));
+    expr->tip=val->tip;
+    return expr;
+}
+struct lista_lit_t *initTipListLit(char* val)
+{
+    struct lista_lit_t* expr = (struct lista_lit_t*)malloc(sizeof(struct lista_lit_t));
+    expr->urmator=NULL;
+    expr->lit=val[1];
+    return expr;
+}
+struct lista_param_t *initTipListParam(struct param_t* val)
+{
+    struct lista_param_t* expr = (struct lista_param_t*)malloc(sizeof(struct lista_param_t));
+    expr->urmator=NULL;
+    expr->param = (struct param_t*)malloc(sizeof(val));
+    expr->param=val;
+    return expr;
+}
+struct valnr_t *InitNr(char * tip, float val)
+{
+    struct valnr_t * expr = (struct valnr_t*)malloc(sizeof(struct valnr_t));
+    struct tip_t* tip_expr=initTip_t(tip);
+    expr->tip=(struct tip_t*)malloc(sizeof(tip_expr));
+    expr->tip=tip_expr;
+    expr->val=val;
     return expr;
 }
 int main(int argc, char** argv){
