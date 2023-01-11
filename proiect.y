@@ -130,70 +130,23 @@ void tipuriEgale(struct tip_t *stanga, struct tip_t *dreapta);
 %start progr
 
 %%
-progr : var_globale functii user_types bloc  {printf("Sintaxă corectă\n");
-                                             if (corect) {
-                                             printf("Corect semantic\n");
-                                             printTable();
-                                             }
-                                             else
-                                             printf("Incorect semantic\n");
-                                             }
-      | functii user_types bloc {printf("Sintaxă corectă\n");
-                              if (corect) {
-                              printf("Corect semantic\n");
-                              printTable();
-                              }
-                              else
-                              printf("Incorect semantic\n");
-                              }
-      | var_globale  user_types bloc {printf("Sintaxă corectă\n");
-                                   if (corect) {
-                                   printf("Corect semantic\n");
-                                   printTable();
-                                   }
-                                   else
-                                   printf("Incorect semantic\n");
-                                   }
-      | var_globale  functii bloc {printf("Sintaxă corectă\n");
-                                   if (corect) {
-                                   printf("Corect semantic\n");
-                                   printTable();
-                                   }
-                                   else
-                                   printf("Incorect semantic\n");
-                                   }
-      | user_types bloc {printf("Sintaxă corectă\n");
-                         if (corect) {
+progr : optionale bloc{
+                       printf("Sintaxă corectă\n");
+                       if (corect) {
                          printf("Corect semantic\n");
                          printTable();
-                         }
-                         else
-                         printf("Incorect semantic\n");
-                         }
-      | functii bloc {printf("Sintaxă corectă\n");
-                    if (corect) {
-                    printf("Corect semantic\n");
-                    printTable();
-                    }
-                    else
-                    printf("Incorect semantic\n");
-                    }
-      | var_globale  bloc {printf("Sintaxă corectă\n");
-                         if (corect) {
-                         printf("Corect semantic\n");
-                         printTable();
-                         }
-                         else
-                         printf("Incorect semantic\n");
-                         }
-      | bloc {printf("Sintaxă corectă\n");
-              if (corect) {
-               printf("Corect semantic\n");
-               printTable();
-               }
-               else
-               printf("Incorect semantic\n");
-               }
+                       }
+                       else
+                       printf("Incorect semantic\n");
+                   }
+      ;
+optionale : var_globale functii user_types {functie_curenta="main";}
+      | functii user_types {functie_curenta="main";}
+      | var_globale  user_types {functie_curenta="main";}
+      | var_globale  functii {functie_curenta="main";}
+      | user_types {functie_curenta="main";}
+      | functii {functie_curenta="main";}
+      | var_globale {functie_curenta="main";}
       ;
 var_globale : declaratie ';' { 
                       if($1->cons) 
@@ -340,7 +293,7 @@ TIP : INT { $$=initTip_t($1); }
     | CHAR { $$=initTip_t($1); }
     | STRING { $$=initTip_t($1); }
     | BOOL { $$=initTip_t($1); }
-    | UTYPE ID { isStruct($2,NULL); $$=initTip_t($2);}
+    | UTYPE ID { isStruct($2,NULL); structura_curenta=NULL; $$=initTip_t($2);}
     ;
 user_types : user_type
            | user_types user_type
@@ -413,6 +366,7 @@ VAR : ID {
          }*/
           isStruct($1,$3);
           $$=initVar($1, -1, tipVar($3));
+          structura_curenta=NULL;
          }
     | ID '[' NR ']' '.' VAR{
          //de adaugat verificare daca e vector (nu am testat)
@@ -422,6 +376,7 @@ VAR : ID {
          }*/
          isStruct($1,$6);
          $$=initVar($1, $3->val,tipVar($6));
+         structura_curenta=NULL;
          }
     | ID '[' VAR ']' '.' VAR{
          //de adaugat verificare daca e vector (nu am testat)
@@ -433,6 +388,7 @@ VAR : ID {
          struct tip_t *tip_expr=initTip_t("int");
          tipuriEgale(tip_expr, tipVar($3));
          $$=initVar($1, 1,tipVar($6));
+         structura_curenta=NULL;
          }
     ;
 statement : VAR NEWVAL VAR ';' {
@@ -903,11 +859,12 @@ void isStruct(char * nume, struct var* comp){
         {
             structura_curenta=name;
             varDefinita(comp->nume);
+            //structura_curenta=NULL;
             if(!corect)
             {
                 printf("Variabila %s nu are membrul %s\n", nume, comp->nume);
                 return;
-            }
+            }    
             return;
         }
         else return;
