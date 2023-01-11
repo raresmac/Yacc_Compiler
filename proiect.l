@@ -7,12 +7,14 @@
 "Eval" {yylval.strval=strdup(yytext); return EVAL;}
 "TypeOf" {yylval.strval=strdup(yytext); return TYPEOF;}
 "nou tip"|"new type" {yylval.strval=strdup(yytext); return NEWTYPE;}
+"utip"|"utype" {yylval.strval=strdup(yytext); return UTYPE;}
 "int" {yylval.strval=strdup(yytext); return INT;}
 "float" {yylval.strval=strdup(yytext); return FLOAT;}
 "char" {yylval.strval=strdup(yytext); return CHAR;}
 "string" {yylval.strval=strdup(yytext); return STRING;}
 "bool" {yylval.strval=strdup(yytext); return BOOL;}
 "if"|"daca" {yylval.strval=strdup(yytext); return IF;}
+"else"|"altfel" {yylval.strval=strdup(yytext); return ELSE;}
 "for"|"pentru" {yylval.strval=strdup(yytext); return FOR;}
 "while"|"cat timp" {yylval.strval=strdup(yytext); return WHILE;}
 "incepe"|"begin" {yylval.strval=strdup(yytext); return BGIN;}
@@ -36,6 +38,7 @@
 "main:" {yylval.strval=strdup(yytext); return MAIN;}
 "adevarat" {yylval.strval=strdup(yytext); return TRU;}
 "fals" {yylval.strval=strdup(yytext); return FALS;}
+"return"|"returneaza" {yylval.strval=strdup(yytext); return RET;}
 [_a-zA-Z][_a-zA-Z0-9]* {yylval.strval=strdup(yytext); return ID;}
 [0-9]+ {yylval.vali=atoi(yytext); return NRI;}
 [0-9]+"."[0-9]+ {yylval.valf=atoi(yytext); return NRF;}
