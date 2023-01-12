@@ -1,26 +1,32 @@
 int a1;
 char c := 'a';
-int v [3] := { 1 , 2 , 3 } ;
+DEFINESTE MAXX 1024
+char v [3] := { 'a', 'b' , 'c' } ;
+string cuv := { 'h', 'e', 'l', 'l', 'o' } ;
 bool tru  := adevarat;
-int functieFaina(int x)
+int functieFaina(int x, int y, char z)
 incepe
-    for (int i:=1;| i<x | i:=i+1; )
+    for (int i:=1;| i<x | i:=(i+1+2)*5/3; )
     {
        x := x - 1;
-       return 5;
     }
+    return 5;
 termina
 nou tip nice { int st; int dr;}
 main:
 incepe
-    int y := 3;
-    int x := 2;
-    TypeOf(5.7);
-    int l[3];
+    int y := 3 ;
+    const int x :=1;
     utip nice z;
-    int pro := 756;
-    z.st:=0;
+    z.st:=10;
+    TypeOf(z.st);
+    TypeOf(10);
+    TypeOf(3.4);
+    x:=2;
     if(tru==adevarat)
-        {y devine functieFaina(x);}
+        {y devine functieFaina(x,y,v[1]);}
+    float i;
+    while(v[i] NU E 0)
+        i+=1;
     a1 devine -6 ;
 termina
