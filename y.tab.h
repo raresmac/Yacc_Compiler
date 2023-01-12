@@ -147,7 +147,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 103 "proiect.y"
+#line 106 "proiect.y"
 
     struct valnr_t *valnr;
     int vali;

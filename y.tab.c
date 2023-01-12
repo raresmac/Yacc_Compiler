@@ -81,6 +81,8 @@ char *structura_curenta = NULL;
 int corect = 1;
 /* TO DO
 1) implementare eval() (doar pt int uri)
+2) free memory? vezi val1 de la lab
+3) bug in care valoarea floatului nu e citita corect (vezi typeof-ul din exemplu)
 OBS:
 -TESTING
 -lista_op si lista_cond sa permita paranteze cum trebuie..nu am testat prea mult
@@ -161,6 +163,7 @@ void insertVarListTable(struct lista_param_t *var);
 void insertFuncTable(char *nume, struct tip_t *ret, struct lista_param_t *param);
 void insertStructTable(char *nume, struct lista_param_t *param);
 void printTable();
+void sfarsesteProgram();
 void isStruct(char * nume);
 bool varDefinita(char *nume);
 void funDefinita(char *nume, struct lista_param_t *arg);
@@ -170,7 +173,7 @@ struct tip_t *tipVar(struct var *v);
 struct tip_t *tipRetFun(char *nume);
 void tipuriEgale(struct tip_t *stanga, struct tip_t *dreapta);
 
-#line 174 "y.tab.c"
+#line 177 "y.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -307,7 +310,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 103 "proiect.y"
+#line 106 "proiect.y"
 
     struct valnr_t *valnr;
     int vali;
@@ -320,7 +323,7 @@ union YYSTYPE
     struct var *v; 
     struct tip_t* tip;
 
-#line 324 "y.tab.c"
+#line 327 "y.tab.c"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -816,20 +819,20 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,   131,   131,   141,   142,   143,   144,   145,   146,   147,
-     149,   155,   156,   157,   164,   165,   167,   168,   175,   181,
-     187,   194,   200,   213,   226,   233,   239,   243,   248,   254,
-     260,   270,   282,   288,   300,   306,   313,   314,   316,   317,
-     318,   319,   320,   321,   323,   324,   326,   333,   334,   336,
-     338,   346,   347,   354,   355,   357,   358,   360,   361,   371,
-     380,   394,   411,   416,   421,   426,   431,   437,   443,   450,
-     451,   452,   453,   454,   455,   456,   457,   463,   464,   471,
-     475,   478,   481,   482,   483,   484,   486,   487,   488,   490,
-     491,   492,   493,   494,   496,   497,   498,   500,   501,   502,
-     503,   504,   506,   511,   512,   519,   523,   528,   533,   535,
-     536,   537,   538,   539,   540,   541,   543,   544,   545,   546,
-     548,   549,   550,   551,   552,   553,   554,   556,   557,   558,
-     559,   561,   562,   569,   570,   576
+       0,   134,   134,   144,   145,   146,   147,   148,   149,   150,
+     152,   158,   159,   160,   167,   168,   170,   171,   178,   184,
+     190,   197,   203,   216,   229,   236,   242,   246,   251,   257,
+     263,   273,   285,   291,   303,   309,   316,   317,   319,   320,
+     321,   322,   323,   324,   326,   327,   329,   336,   337,   339,
+     341,   349,   353,   361,   362,   364,   365,   367,   368,   378,
+     388,   403,   423,   428,   433,   438,   443,   449,   455,   462,
+     463,   464,   465,   466,   467,   468,   469,   475,   476,   483,
+     490,   493,   496,   497,   498,   499,   501,   502,   503,   505,
+     506,   507,   508,   509,   511,   512,   513,   515,   516,   517,
+     518,   519,   521,   526,   527,   534,   538,   543,   548,   550,
+     551,   552,   553,   554,   555,   556,   558,   559,   560,   561,
+     563,   564,   565,   566,   567,   568,   569,   571,   572,   573,
+     574,   576,   577,   588,   589,   595
 };
 #endif
 
@@ -1662,9 +1665,9 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* progr: optionale bloc  */
-#line 131 "proiect.y"
+#line 134 "proiect.y"
                       {
-                       printf("Sintaxă corectă\n");
+                       printf("Sintaxa corecta\n");
                        if (corect) {
                          printf("Corect semantic\n");
                          printTable();
@@ -1672,126 +1675,126 @@ yyreduce:
                        else
                        printf("Incorect semantic\n");
                    }
-#line 1676 "y.tab.c"
+#line 1679 "y.tab.c"
     break;
 
   case 3: /* optionale: var_globale functii user_types  */
-#line 141 "proiect.y"
+#line 144 "proiect.y"
                                            {functie_curenta="main";}
-#line 1682 "y.tab.c"
+#line 1685 "y.tab.c"
     break;
 
   case 4: /* optionale: functii user_types  */
-#line 142 "proiect.y"
+#line 145 "proiect.y"
                            {functie_curenta="main";}
-#line 1688 "y.tab.c"
+#line 1691 "y.tab.c"
     break;
 
   case 5: /* optionale: var_globale user_types  */
-#line 143 "proiect.y"
+#line 146 "proiect.y"
                                 {functie_curenta="main";}
-#line 1694 "y.tab.c"
+#line 1697 "y.tab.c"
     break;
 
   case 6: /* optionale: var_globale functii  */
-#line 144 "proiect.y"
+#line 147 "proiect.y"
                              {functie_curenta="main";}
-#line 1700 "y.tab.c"
+#line 1703 "y.tab.c"
     break;
 
   case 7: /* optionale: user_types  */
-#line 145 "proiect.y"
+#line 148 "proiect.y"
                    {functie_curenta="main";}
-#line 1706 "y.tab.c"
+#line 1709 "y.tab.c"
     break;
 
   case 8: /* optionale: functii  */
-#line 146 "proiect.y"
+#line 149 "proiect.y"
                 {functie_curenta="main";}
-#line 1712 "y.tab.c"
+#line 1715 "y.tab.c"
     break;
 
   case 9: /* optionale: var_globale  */
-#line 147 "proiect.y"
+#line 150 "proiect.y"
                     {functie_curenta="main";}
-#line 1718 "y.tab.c"
+#line 1721 "y.tab.c"
     break;
 
   case 10: /* var_globale: declaratie ';'  */
-#line 149 "proiect.y"
+#line 152 "proiect.y"
                              { 
                       if((yyvsp[-1].param_t)->cons) 
                           insertConstTable((yyvsp[-1].param_t)->nume,(yyvsp[-1].param_t)->tip); 
                       else
                            insertVarTable((yyvsp[-1].param_t)->nume,(yyvsp[-1].param_t)->tip);
             }
-#line 1729 "y.tab.c"
+#line 1732 "y.tab.c"
     break;
 
   case 13: /* var_globale: var_globale declaratie ';'  */
-#line 157 "proiect.y"
+#line 160 "proiect.y"
                                          { 
                       if((yyvsp[-1].param_t)->cons) 
                           insertConstTable((yyvsp[-1].param_t)->nume,(yyvsp[-1].param_t)->tip); 
                       else
                            insertVarTable((yyvsp[-1].param_t)->nume,(yyvsp[-1].param_t)->tip);
             }
-#line 1740 "y.tab.c"
+#line 1743 "y.tab.c"
     break;
 
   case 14: /* definitie: DEFINE ID NR  */
-#line 164 "proiect.y"
+#line 167 "proiect.y"
                          { insertConstTable((yyvsp[-1].strval),(yyvsp[0].valnr)->tip); }
-#line 1746 "y.tab.c"
+#line 1749 "y.tab.c"
     break;
 
   case 15: /* definitie: DEFINE ID LIT  */
-#line 165 "proiect.y"
+#line 168 "proiect.y"
                           { struct tip_t *tip_expr=initTip_t("char"); insertConstTable((yyvsp[-1].strval),tip_expr); }
-#line 1752 "y.tab.c"
+#line 1755 "y.tab.c"
     break;
 
   case 16: /* declaratii: declaratie ';'  */
-#line 167 "proiect.y"
+#line 170 "proiect.y"
                             {(yyval.lista_param_t) = initTipListParam((yyvsp[-1].param_t));}
-#line 1758 "y.tab.c"
+#line 1761 "y.tab.c"
     break;
 
   case 17: /* declaratii: declaratii declaratie ';'  */
-#line 168 "proiect.y"
+#line 171 "proiect.y"
                                       {
                                (yyval.lista_param_t)=(yyvsp[-2].lista_param_t);
                                while((yyvsp[-2].lista_param_t)->urmator)
                                    (yyvsp[-2].lista_param_t)=(yyvsp[-2].lista_param_t)->urmator;
                                (yyvsp[-2].lista_param_t)->urmator=initTipListParam((yyvsp[-1].param_t));
                              }
-#line 1769 "y.tab.c"
+#line 1772 "y.tab.c"
     break;
 
   case 18: /* declaratie: TIP ID ASSIGN LIT  */
-#line 175 "proiect.y"
+#line 178 "proiect.y"
                               {
                               structDefinita((yyvsp[-3].tip)->nume);
                               struct tip_t *tip_expr=initTip_t("char");
                               tipuriEgale(tip_expr, (yyvsp[-3].tip));
                               (yyval.param_t) = initTipParam((yyvsp[-3].tip),(yyvsp[-2].strval),0);
                               }
-#line 1780 "y.tab.c"
+#line 1783 "y.tab.c"
     break;
 
   case 19: /* declaratie: CONST TIP ID ASSIGN LIT  */
-#line 181 "proiect.y"
+#line 184 "proiect.y"
                                     {
                               structDefinita((yyvsp[-3].tip)->nume);                              
                               struct tip_t *tip_expr=initTip_t("char");
                               tipuriEgale(tip_expr, (yyvsp[-3].tip));
                               (yyval.param_t) = initTipParam((yyvsp[-3].tip),(yyvsp[-2].strval),1);
                               }
-#line 1791 "y.tab.c"
+#line 1794 "y.tab.c"
     break;
 
   case 20: /* declaratie: TIP ID '[' ']' ASSIGN '{' lista_lit '}'  */
-#line 187 "proiect.y"
+#line 190 "proiect.y"
                                                     {
                               (yyvsp[-7].tip)->dimensiune = (yyvsp[-1].lista_lit_t)->lg;
                               structDefinita((yyvsp[-7].tip)->nume);
@@ -1799,58 +1802,58 @@ yyreduce:
                               tipuriEgale(tip_expr, (yyvsp[-7].tip));
                               (yyval.param_t) = initTipParam((yyvsp[-7].tip),(yyvsp[-6].strval),0);
                               }
-#line 1803 "y.tab.c"
+#line 1806 "y.tab.c"
     break;
 
   case 21: /* declaratie: TIP ID ASSIGN '{' lista_lit '}'  */
-#line 194 "proiect.y"
+#line 197 "proiect.y"
                                             {
                               structDefinita((yyvsp[-5].tip)->nume);
                               struct tip_t *tip_expr=initTip_t("string");
                               tipuriEgale(tip_expr, (yyvsp[-5].tip));
                               (yyval.param_t) = initTipParam((yyvsp[-5].tip),(yyvsp[-4].strval),0);
                               }
-#line 1814 "y.tab.c"
+#line 1817 "y.tab.c"
     break;
 
   case 22: /* declaratie: TIP ID '[' NR ']' ASSIGN '{' lista_lit '}'  */
-#line 200 "proiect.y"
+#line 203 "proiect.y"
                                                        {
                               if((yyvsp[-5].valnr)->val < 1){
-                                printf("Dimensiunea nu este pozitiva!\n");
+                                printf("Linia %d: Dimensiunea nu este pozitiva!\n",yylineno);
                                 //exit(0);
                               }
                               posInt((yyvsp[-5].valnr));
                               lungimiEgale((yyvsp[-5].valnr)->val,(yyvsp[-1].lista_lit_t)->lg);
-                              (yyvsp[-8].tip)->dimensiune = (yyvsp[-1].lista_lit_t)->lg;
+                              (yyvsp[-8].tip)->dimensiune = (yyvsp[-5].valnr)->val;
                               structDefinita((yyvsp[-8].tip)->nume);
                               struct tip_t *tip_expr=initTip_t("char");
                               tipuriEgale(tip_expr, (yyvsp[-8].tip));
                               (yyval.param_t) = initTipParam((yyvsp[-8].tip),(yyvsp[-7].strval),0);
                               }
-#line 1832 "y.tab.c"
+#line 1835 "y.tab.c"
     break;
 
   case 23: /* declaratie: CONST TIP ID '[' NR ']' ASSIGN '{' lista_lit '}'  */
-#line 213 "proiect.y"
+#line 216 "proiect.y"
                                                              {
                               if((yyvsp[-5].valnr)->val < 1){
-                                printf("Dimensiunea nu este pozitiva!\n");
+                                printf("Linia %d: Dimensiunea nu este pozitiva!\n",yylineno);
                                 //exit(0);
                               }
                               posInt((yyvsp[-5].valnr));
                               lungimiEgale((yyvsp[-5].valnr)->val,(yyvsp[-1].lista_lit_t)->lg);
-                              (yyvsp[-8].tip)->dimensiune = (yyvsp[-1].lista_lit_t)->lg;
+                              (yyvsp[-8].tip)->dimensiune = (yyvsp[-5].valnr)->val;
                               structDefinita((yyvsp[-8].tip)->nume);
                               struct tip_t *tip_expr=initTip_t("char");
                               tipuriEgale(tip_expr, (yyvsp[-8].tip));
                               (yyval.param_t) = initTipParam((yyvsp[-8].tip),(yyvsp[-7].strval),1);
                               }
-#line 1850 "y.tab.c"
+#line 1853 "y.tab.c"
     break;
 
   case 24: /* declaratie: CONST TIP ID '[' ']' ASSIGN '{' lista_lit '}'  */
-#line 226 "proiect.y"
+#line 229 "proiect.y"
                                                           {
                               (yyvsp[-7].tip)->dimensiune = (yyvsp[-1].lista_lit_t)->lg;
                               structDefinita((yyvsp[-7].tip)->nume);
@@ -1858,65 +1861,65 @@ yyreduce:
                               tipuriEgale(tip_expr, (yyvsp[-7].tip));
                               (yyval.param_t) = initTipParam((yyvsp[-7].tip),(yyvsp[-6].strval),1);
                               }
-#line 1862 "y.tab.c"
+#line 1865 "y.tab.c"
     break;
 
   case 25: /* declaratie: CONST TIP ID ASSIGN '{' lista_lit '}'  */
-#line 233 "proiect.y"
+#line 236 "proiect.y"
                                                   {
                               structDefinita((yyvsp[-5].tip)->nume);
                               struct tip_t *tip_expr=initTip_t("string");
                               tipuriEgale(tip_expr, (yyvsp[-5].tip));
                               (yyval.param_t) = initTipParam((yyvsp[-5].tip),(yyvsp[-4].strval),1);
                               }
-#line 1873 "y.tab.c"
+#line 1876 "y.tab.c"
     break;
 
   case 26: /* declaratie: TIP ID  */
-#line 239 "proiect.y"
+#line 242 "proiect.y"
                     {
                     structDefinita((yyvsp[-1].tip)->nume);
                     (yyval.param_t) = initTipParam((yyvsp[-1].tip),(yyvsp[0].strval),0);
                     }
-#line 1882 "y.tab.c"
+#line 1885 "y.tab.c"
     break;
 
   case 27: /* declaratie: TIP ID ASSIGN NR  */
-#line 243 "proiect.y"
+#line 246 "proiect.y"
                               {
                               structDefinita((yyvsp[-3].tip)->nume);
                               tipuriEgale((yyvsp[0].valnr)->tip, (yyvsp[-3].tip));
                               (yyval.param_t) = initTipParam((yyvsp[-3].tip),(yyvsp[-2].strval),0);
                               }
-#line 1892 "y.tab.c"
+#line 1895 "y.tab.c"
     break;
 
   case 28: /* declaratie: CONST TIP ID ASSIGN NR  */
-#line 248 "proiect.y"
+#line 251 "proiect.y"
                                     {
                               structDefinita((yyvsp[-3].tip)->nume);
                               tipuriEgale((yyvsp[0].valnr)->tip, (yyvsp[-3].tip));
                               (yyval.param_t) = initTipParam((yyvsp[-3].tip),(yyvsp[-2].strval),1);
                               }
-#line 1902 "y.tab.c"
+#line 1905 "y.tab.c"
     break;
 
   case 29: /* declaratie: TIP ID '[' ']' ASSIGN '{' lista_nr '}'  */
-#line 254 "proiect.y"
+#line 257 "proiect.y"
                                                    {
                               (yyvsp[-7].tip)->dimensiune = (yyvsp[-1].lista_nr_t)->lg;
                               structDefinita((yyvsp[-7].tip)->nume);
                               tipuriEgale((yyvsp[-1].lista_nr_t)->tip,(yyvsp[-7].tip));
                               (yyval.param_t) = initTipParam((yyvsp[-7].tip),(yyvsp[-6].strval),0);
                               }
-#line 1913 "y.tab.c"
+#line 1916 "y.tab.c"
     break;
 
   case 30: /* declaratie: TIP ID '[' NR ']'  */
-#line 260 "proiect.y"
+#line 263 "proiect.y"
                               {
                               if((yyvsp[-1].valnr)->val < 1){
-                                printf("Dimensiunea nu este pozitiva!\n");
+                                printf("Linia %d: Dimensiunea nu este pozitiva!\n",yylineno);
                                 //exit(0);
                               }
                               posInt((yyvsp[-1].valnr));
@@ -1924,143 +1927,143 @@ yyreduce:
                               structDefinita((yyvsp[-4].tip)->nume);
                               (yyval.param_t) = initTipParam((yyvsp[-4].tip),(yyvsp[-3].strval),0);
                               }
-#line 1928 "y.tab.c"
+#line 1931 "y.tab.c"
     break;
 
   case 31: /* declaratie: TIP ID '[' NR ']' ASSIGN '{' lista_nr '}'  */
-#line 270 "proiect.y"
+#line 273 "proiect.y"
                                                       {
                               if((yyvsp[-5].valnr)->val < 1){
-                                printf("Dimensiunea nu este pozitiva!\n");
+                                printf("Linia %d: Dimensiunea nu este pozitiva!\n",yylineno);
                                 //exit(0);
                               }
                               posInt((yyvsp[-5].valnr));
                               lungimiEgale((yyvsp[-5].valnr)->val,(yyvsp[-1].lista_nr_t)->lg);
-                              (yyvsp[-8].tip)->dimensiune = (yyvsp[-1].lista_nr_t)->lg;
+                              (yyvsp[-8].tip)->dimensiune = (yyvsp[-5].valnr)->val;
                               structDefinita((yyvsp[-8].tip)->nume);
                               tipuriEgale((yyvsp[-8].tip), (yyvsp[-1].lista_nr_t)->tip);
                               (yyval.param_t) = initTipParam((yyvsp[-8].tip),(yyvsp[-7].strval),0);
                               }
-#line 1945 "y.tab.c"
+#line 1948 "y.tab.c"
     break;
 
   case 32: /* declaratie: CONST TIP ID '[' ']' ASSIGN '{' lista_nr '}'  */
-#line 282 "proiect.y"
+#line 285 "proiect.y"
                                                          {
                               (yyvsp[-7].tip)->dimensiune = (yyvsp[-1].lista_nr_t)->lg;
                               structDefinita((yyvsp[-7].tip)->nume);
                               tipuriEgale((yyvsp[-1].lista_nr_t)->tip, (yyvsp[-7].tip));
                               (yyval.param_t) = initTipParam((yyvsp[-7].tip),(yyvsp[-6].strval),1);
                               }
-#line 1956 "y.tab.c"
+#line 1959 "y.tab.c"
     break;
 
   case 33: /* declaratie: CONST TIP ID '[' NR ']' ASSIGN '{' lista_nr '}'  */
-#line 288 "proiect.y"
+#line 291 "proiect.y"
                                                             {
                               if((yyvsp[-5].valnr)->val < 1){
-                                printf("Dimensiunea nu este pozitiva!\n");
+                                printf("Linia %d: Dimensiunea nu este pozitiva!\n",yylineno);
                                 //exit(0);
                               }
                               posInt((yyvsp[-5].valnr));
                               lungimiEgale((yyvsp[-5].valnr)->val,(yyvsp[-1].lista_nr_t)->lg);
-                              (yyvsp[-8].tip)->dimensiune = (yyvsp[-1].lista_nr_t)->lg;
+                              (yyvsp[-8].tip)->dimensiune = (yyvsp[-5].valnr)->val;
                               structDefinita((yyvsp[-8].tip)->nume);
                               tipuriEgale((yyvsp[-1].lista_nr_t)->tip, (yyvsp[-8].tip));
                               (yyval.param_t) = initTipParam((yyvsp[-8].tip),(yyvsp[-7].strval),1);
                               }
-#line 1973 "y.tab.c"
+#line 1976 "y.tab.c"
     break;
 
   case 34: /* declaratie: TIP ID ASSIGN BVAL  */
-#line 300 "proiect.y"
+#line 303 "proiect.y"
                                {
                               structDefinita((yyvsp[-3].tip)->nume);
                               struct tip_t *tip_expr=initTip_t("bool");
                               tipuriEgale((yyvsp[-3].tip), tip_expr);
                               (yyval.param_t) = initTipParam((yyvsp[-3].tip),(yyvsp[-2].strval),0);
                               }
-#line 1984 "y.tab.c"
+#line 1987 "y.tab.c"
     break;
 
   case 35: /* declaratie: CONST TIP ID ASSIGN BVAL  */
-#line 306 "proiect.y"
+#line 309 "proiect.y"
                                      {
                               structDefinita((yyvsp[-3].tip)->nume);
                               struct tip_t *tip_expr=initTip_t("bool");
                               tipuriEgale((yyvsp[-3].tip), tip_expr);
                               (yyval.param_t) = initTipParam((yyvsp[-3].tip),(yyvsp[-2].strval),1);
                               }
-#line 1995 "y.tab.c"
+#line 1998 "y.tab.c"
     break;
 
   case 36: /* BVAL: TRU  */
-#line 313 "proiect.y"
+#line 316 "proiect.y"
            { (yyval.vali)=1; }
-#line 2001 "y.tab.c"
+#line 2004 "y.tab.c"
     break;
 
   case 37: /* BVAL: FALS  */
-#line 314 "proiect.y"
+#line 317 "proiect.y"
             { (yyval.vali)=0; }
-#line 2007 "y.tab.c"
+#line 2010 "y.tab.c"
     break;
 
   case 38: /* TIP: INT  */
-#line 316 "proiect.y"
+#line 319 "proiect.y"
           { (yyval.tip)=initTip_t((yyvsp[0].strval)); }
-#line 2013 "y.tab.c"
+#line 2016 "y.tab.c"
     break;
 
   case 39: /* TIP: FLOAT  */
-#line 317 "proiect.y"
+#line 320 "proiect.y"
             { (yyval.tip)=initTip_t((yyvsp[0].strval)); }
-#line 2019 "y.tab.c"
+#line 2022 "y.tab.c"
     break;
 
   case 40: /* TIP: CHAR  */
-#line 318 "proiect.y"
+#line 321 "proiect.y"
            { (yyval.tip)=initTip_t((yyvsp[0].strval)); }
-#line 2025 "y.tab.c"
+#line 2028 "y.tab.c"
     break;
 
   case 41: /* TIP: STRING  */
-#line 319 "proiect.y"
+#line 322 "proiect.y"
              { (yyval.tip)=initTip_t((yyvsp[0].strval)); }
-#line 2031 "y.tab.c"
+#line 2034 "y.tab.c"
     break;
 
   case 42: /* TIP: BOOL  */
-#line 320 "proiect.y"
+#line 323 "proiect.y"
            { (yyval.tip)=initTip_t((yyvsp[0].strval)); }
-#line 2037 "y.tab.c"
+#line 2040 "y.tab.c"
     break;
 
   case 43: /* TIP: UTYPE ID  */
-#line 321 "proiect.y"
+#line 324 "proiect.y"
                { isStruct((yyvsp[0].strval)); structura_curenta=NULL; (yyval.tip)=initTip_t((yyvsp[0].strval));}
-#line 2043 "y.tab.c"
+#line 2046 "y.tab.c"
     break;
 
   case 46: /* user_type: NEWTYPE ID '{' declaratii '}'  */
-#line 326 "proiect.y"
+#line 329 "proiect.y"
                                           {
                     insertStructTable((yyvsp[-3].strval), (yyvsp[-1].lista_param_t));
                     structura_curenta = (yyvsp[-3].strval);
                     insertVarListTable((yyvsp[-1].lista_param_t));
                     structura_curenta = NULL;
                 }
-#line 2054 "y.tab.c"
+#line 2057 "y.tab.c"
     break;
 
   case 49: /* functie: declaratie_fct BGIN list END  */
-#line 336 "proiect.y"
+#line 339 "proiect.y"
                                       { functie_curenta = NULL; tipuriEgale((yyvsp[-3].tip), (yyvsp[-1].tip));}
-#line 2060 "y.tab.c"
+#line 2063 "y.tab.c"
     break;
 
   case 50: /* declaratie_fct: TIP ID '(' lista_param ')'  */
-#line 338 "proiect.y"
+#line 341 "proiect.y"
                                            {
                structDefinita((yyvsp[-4].tip)->nume);
                functie_curenta = (yyvsp[-3].strval); 
@@ -2068,182 +2071,191 @@ yyreduce:
                insertFuncTable((yyvsp[-3].strval), (yyvsp[-4].tip), (yyvsp[-1].lista_param_t));
                (yyval.tip)=(yyvsp[-4].tip);
            }
-#line 2072 "y.tab.c"
+#line 2075 "y.tab.c"
     break;
 
   case 51: /* lista_param: param  */
-#line 346 "proiect.y"
-                    {(yyval.lista_param_t) = initTipListParam((yyvsp[0].param_t));}
-#line 2078 "y.tab.c"
+#line 349 "proiect.y"
+                    {
+                    (yyval.lista_param_t) = initTipListParam((yyvsp[0].param_t));
+                    //free($1);
+                    }
+#line 2084 "y.tab.c"
     break;
 
   case 52: /* lista_param: lista_param ',' param  */
-#line 347 "proiect.y"
+#line 353 "proiect.y"
                                     {
                                (yyval.lista_param_t)=(yyvsp[-2].lista_param_t);
                                while((yyvsp[-2].lista_param_t)->urmator)
                                    (yyvsp[-2].lista_param_t)=(yyvsp[-2].lista_param_t)->urmator;
                                (yyvsp[-2].lista_param_t)->urmator=initTipListParam((yyvsp[0].param_t));
+                               //free($3);
                              }
-#line 2089 "y.tab.c"
+#line 2096 "y.tab.c"
     break;
 
   case 53: /* param: TIP ID  */
-#line 354 "proiect.y"
+#line 361 "proiect.y"
                { (yyval.param_t) = initTipParam((yyvsp[-1].tip),(yyvsp[0].strval),0); }
-#line 2095 "y.tab.c"
+#line 2102 "y.tab.c"
     break;
 
   case 54: /* param: CONST TIP ID  */
-#line 355 "proiect.y"
+#line 362 "proiect.y"
                      {  (yyval.param_t) = initTipParam((yyvsp[-1].tip),(yyvsp[0].strval),1); }
-#line 2101 "y.tab.c"
+#line 2108 "y.tab.c"
     break;
 
   case 56: /* list: list statement  */
-#line 358 "proiect.y"
+#line 365 "proiect.y"
                       {if((yyvsp[-1].tip) && (yyvsp[0].tip))tipuriEgale((yyvsp[-1].tip),(yyvsp[0].tip)); if((yyvsp[-1].tip)) (yyval.tip)=(yyvsp[-1].tip); else if((yyvsp[0].tip)) (yyval.tip)=(yyvsp[0].tip);}
-#line 2107 "y.tab.c"
+#line 2114 "y.tab.c"
     break;
 
   case 57: /* VAR: SVAR  */
-#line 360 "proiect.y"
+#line 367 "proiect.y"
            {structura_curenta=NULL;}
-#line 2113 "y.tab.c"
+#line 2120 "y.tab.c"
     break;
 
   case 58: /* VAR: SVAR '.' SVAR  */
-#line 361 "proiect.y"
+#line 368 "proiect.y"
                     {
           structura_curenta=NULL;
           isStruct(tipVar((yyvsp[-2].v))->nume);
           (yyval.v)=initVar((yyvsp[-2].v)->nume, -1, (yyvsp[0].v));
           if(tipVar((yyval.v))->dimensiune){
-            printf("Incorect semantic!");
+            printf("Linia %d: %s e vector, trebuie apelat un element al lui\n",yylineno,(yyvsp[-2].v)->nume);
             //exit(0);
          }
        }
-#line 2127 "y.tab.c"
+#line 2134 "y.tab.c"
     break;
 
   case 59: /* SVAR: ID  */
-#line 371 "proiect.y"
+#line 378 "proiect.y"
           {
          (yyval.v)=initVar((yyvsp[0].strval), -1, 0);
          varDefinita((yyvsp[0].strval));
          if(tipVar((yyval.v))->dimensiune){
-            printf("Incorect semantic!");
+            printf("Linia %d: %s e vector, trebuie apelat un element al lui\n",yylineno,(yyvsp[0].strval));
+            corect=0;
             //exit(0);
          }
          structura_curenta=tipVar((yyval.v))->nume;
          }
-#line 2141 "y.tab.c"
+#line 2149 "y.tab.c"
     break;
 
   case 60: /* SVAR: ID '[' NR ']'  */
-#line 380 "proiect.y"
+#line 388 "proiect.y"
                    {
          (yyval.v)=initVar((yyvsp[-3].strval), (yyvsp[-1].valnr)->val, 0);
          varDefinita((yyvsp[-3].strval));
          if(!tipVar((yyval.v))->dimensiune){
-            printf("Incorect semantic!");
+            printf("Linia %d: %s nu e vector, nu puteti apela un element al lui\n",yylineno,(yyvsp[-3].strval));
+            corect=0;
             //exit(0);
          }
          posInt((yyvsp[-1].valnr));
          if(tipVar((yyval.v))->dimensiune<(yyvsp[-1].valnr)->val){
-            printf("Incorect semantic!");
+            printf("Linia %d: Lungimea vectorului %s e mai mica decat indicele dat\n",yylineno,(yyvsp[-3].strval));
             //exit(0);
          }
          structura_curenta=tipVar((yyval.v))->nume;
          }
-#line 2160 "y.tab.c"
+#line 2169 "y.tab.c"
     break;
 
   case 61: /* SVAR: ID '[' VAR ']'  */
-#line 394 "proiect.y"
+#line 403 "proiect.y"
                     {
          struct tip_t *tip_expr=initTip_t("int");
          tipuriEgale(tip_expr, tipVar((yyvsp[-1].v)));
          (yyval.v)=initVar((yyvsp[-3].strval), 1, 0);
          varDefinita((yyvsp[-3].strval)); 
          if(!tipVar((yyval.v))->dimensiune){
-            printf("Incorect semantic!");
+            printf("Linia %d: %s nu e vector, nu puteti apela un element al lui\n",yylineno,(yyvsp[-3].strval));
+            corect=0;
             //exit(0);
          }
+         else
+               printf("Linia %d: Asigurati-va ca %s e positiv si <= %d \n",yylineno,(yyvsp[-1].v)->nume, tipVar((yyval.v))->dimensiune);
          /*posInt($3); but for var
          if(tipVar($$)->dimensiune<$3->val){
-            printf("Incorect semantic!");
+            printf("Linia %d: Lungimea vectorului %s e mai mica decat indicele dat\n",yylineno,$1->nume);
             //exit(0);
          }*/
          structura_curenta=tipVar((yyval.v))->nume;
          }
-#line 2181 "y.tab.c"
+#line 2193 "y.tab.c"
     break;
 
   case 62: /* statement: VAR NEWVAL VAR ';'  */
-#line 411 "proiect.y"
+#line 423 "proiect.y"
                                {
                          varNotConst((yyvsp[-3].v)->nume);
                          tipuriEgale(tipVar((yyvsp[-1].v)), tipVar((yyvsp[-3].v)));
                          (yyval.tip)=NULL;
                          }
-#line 2191 "y.tab.c"
+#line 2203 "y.tab.c"
     break;
 
   case 63: /* statement: VAR NEWVAL NR ';'  */
-#line 416 "proiect.y"
+#line 428 "proiect.y"
                                {
                          varNotConst((yyvsp[-3].v)->nume);
                          tipuriEgale((yyvsp[-1].valnr)->tip, tipVar((yyvsp[-3].v)));
                          (yyval.tip)=NULL;
                          }
-#line 2201 "y.tab.c"
+#line 2213 "y.tab.c"
     break;
 
   case 64: /* statement: VAR NEWVAL lista_op ';'  */
-#line 421 "proiect.y"
+#line 433 "proiect.y"
                                    {
                               varNotConst((yyvsp[-3].v)->nume);
                               tipuriEgale((yyvsp[-1].tip), tipVar((yyvsp[-3].v)));
                               (yyval.tip)=NULL;
                               }
-#line 2211 "y.tab.c"
+#line 2223 "y.tab.c"
     break;
 
   case 65: /* statement: VAR NEWVAL apel ';'  */
-#line 426 "proiect.y"
+#line 438 "proiect.y"
                                 {
                                  varNotConst((yyvsp[-3].v)->nume);
                                  tipuriEgale(tipVar((yyvsp[-3].v)), (yyvsp[-1].tip));
                                  (yyval.tip)=NULL;
                           }
-#line 2221 "y.tab.c"
+#line 2233 "y.tab.c"
     break;
 
   case 66: /* statement: VAR NEWVAL BVAL ';'  */
-#line 431 "proiect.y"
+#line 443 "proiect.y"
                                 {
                                  varNotConst((yyvsp[-3].v)->nume);
                                  struct tip_t *tip_expr=initTip_t("bool");
                                  tipuriEgale(tipVar((yyvsp[-3].v)), tip_expr);    
                                  (yyval.tip)=NULL;
                           }
-#line 2232 "y.tab.c"
+#line 2244 "y.tab.c"
     break;
 
   case 67: /* statement: VAR NEWVAL lista_cond ';'  */
-#line 437 "proiect.y"
+#line 449 "proiect.y"
                                       {
                                  varNotConst((yyvsp[-3].v)->nume);
                                  struct tip_t *tip_expr=initTip_t("bool");
                                  tipuriEgale(tipVar((yyvsp[-3].v)), tip_expr);    
                                  (yyval.tip)=NULL;                           
                           }
-#line 2243 "y.tab.c"
+#line 2255 "y.tab.c"
     break;
 
   case 68: /* statement: declaratie ';'  */
-#line 443 "proiect.y"
+#line 455 "proiect.y"
                            { 
                       if((yyvsp[-1].param_t)->cons) 
                           insertConstTable((yyvsp[-1].param_t)->nume,(yyvsp[-1].param_t)->tip); 
@@ -2251,70 +2263,70 @@ yyreduce:
                            insertVarTable((yyvsp[-1].param_t)->nume,(yyvsp[-1].param_t)->tip);
                       (yyval.tip)=NULL;
             }
-#line 2255 "y.tab.c"
-    break;
-
-  case 69: /* statement: IF '(' lista_cond ')' '{' list '}'  */
-#line 450 "proiect.y"
-                                               {(yyval.tip)=(yyvsp[-1].tip);}
-#line 2261 "y.tab.c"
-    break;
-
-  case 70: /* statement: IF '(' lista_cond ')' '{' list '}' ELSE '{' list '}'  */
-#line 451 "proiect.y"
-                                                                 {if((yyvsp[-5].tip)) (yyval.tip)=(yyvsp[-5].tip); else if((yyvsp[-1].tip)) (yyval.tip)=(yyvsp[-1].tip); else (yyval.tip)=NULL;}
 #line 2267 "y.tab.c"
     break;
 
-  case 71: /* statement: FOR '(' statement '|' lista_cond '|' statement ')' '{' list '}'  */
-#line 452 "proiect.y"
-                                                                            {(yyval.tip)=(yyvsp[-1].tip);}
+  case 69: /* statement: IF '(' lista_cond ')' '{' list '}'  */
+#line 462 "proiect.y"
+                                               {(yyval.tip)=(yyvsp[-1].tip);}
 #line 2273 "y.tab.c"
     break;
 
-  case 72: /* statement: FOR '(' statement '|' lista_cond '|' statement ')' statement  */
-#line 453 "proiect.y"
-                                                                         {(yyval.tip)=(yyvsp[0].tip);}
+  case 70: /* statement: IF '(' lista_cond ')' '{' list '}' ELSE '{' list '}'  */
+#line 463 "proiect.y"
+                                                                 {if((yyvsp[-5].tip)) (yyval.tip)=(yyvsp[-5].tip); else if((yyvsp[-1].tip)) (yyval.tip)=(yyvsp[-1].tip); else (yyval.tip)=NULL;}
 #line 2279 "y.tab.c"
     break;
 
-  case 73: /* statement: WHILE '(' lista_cond ')' '{' list '}'  */
-#line 454 "proiect.y"
-                                                  {(yyval.tip)=(yyvsp[-1].tip);}
+  case 71: /* statement: FOR '(' statement '|' lista_cond '|' statement ')' '{' list '}'  */
+#line 464 "proiect.y"
+                                                                            {(yyval.tip)=(yyvsp[-1].tip);}
 #line 2285 "y.tab.c"
     break;
 
-  case 74: /* statement: WHILE '(' lista_cond ')' statement  */
-#line 455 "proiect.y"
-                                               {(yyval.tip)=(yyvsp[0].tip);}
+  case 72: /* statement: FOR '(' statement '|' lista_cond '|' statement ')' statement  */
+#line 465 "proiect.y"
+                                                                         {(yyval.tip)=(yyvsp[0].tip);}
 #line 2291 "y.tab.c"
     break;
 
-  case 75: /* statement: EVAL '(' VAR ')' ';'  */
-#line 456 "proiect.y"
-                                 {(yyval.tip)=NULL;}
+  case 73: /* statement: WHILE '(' lista_cond ')' '{' list '}'  */
+#line 466 "proiect.y"
+                                                  {(yyval.tip)=(yyvsp[-1].tip);}
 #line 2297 "y.tab.c"
     break;
 
+  case 74: /* statement: WHILE '(' lista_cond ')' statement  */
+#line 467 "proiect.y"
+                                               {(yyval.tip)=(yyvsp[0].tip);}
+#line 2303 "y.tab.c"
+    break;
+
+  case 75: /* statement: EVAL '(' VAR ')' ';'  */
+#line 468 "proiect.y"
+                                 {(yyval.tip)=NULL;}
+#line 2309 "y.tab.c"
+    break;
+
   case 76: /* statement: EVAL '(' NR ')' ';'  */
-#line 457 "proiect.y"
+#line 469 "proiect.y"
                                 {
                                struct tip_t *tip_expr=initTip_t("int");
                                tipuriEgale((yyvsp[-2].valnr)->tip, tip_expr); 
                                if (corect){ printf("Rezultatul expresiei din eval este %f\n", (yyvsp[-2].valnr)->val); }
-                               else {printf("Valorile nu sunt de tip int\n");} (yyval.tip)=NULL;
+                               else {printf("Linia %d: Valorile nu sunt de tip int\n",yylineno);} (yyval.tip)=NULL;
                                }
-#line 2308 "y.tab.c"
+#line 2320 "y.tab.c"
     break;
 
   case 77: /* statement: EVAL '(' lista_op ')' ';'  */
-#line 463 "proiect.y"
+#line 475 "proiect.y"
                                       {(yyval.tip)=NULL;}
-#line 2314 "y.tab.c"
+#line 2326 "y.tab.c"
     break;
 
   case 78: /* statement: TYPEOF '(' VAR ')' ';'  */
-#line 464 "proiect.y"
+#line 476 "proiect.y"
                                     {
                                     (yyval.tip)=NULL;
                                     if(!(yyvsp[-2].v)->param)
@@ -2322,292 +2334,299 @@ yyreduce:
                                     else
                                         printf("Tipul variabilei %s.%s este %s\n",(yyvsp[-2].v)->nume, (yyvsp[-2].v)->param->nume, tipVar((yyvsp[-2].v))->nume);
                                     }
-#line 2326 "y.tab.c"
+#line 2338 "y.tab.c"
     break;
 
   case 79: /* statement: TYPEOF '(' NR ')' ';'  */
-#line 471 "proiect.y"
+#line 483 "proiect.y"
                                   {
                                     (yyval.tip)=NULL;
-                                    printf("Tipul numarului %f este %s\n", (yyvsp[-2].valnr)->val, (yyvsp[-2].valnr)->tip->nume);
+                                    if(strcmp((yyvsp[-2].valnr)->tip->nume,"int")==0)
+                                        printf("Tipul numarului %f este %s\n", (yyvsp[-2].valnr)->val, (yyvsp[-2].valnr)->tip->nume);
+                                    else
+                                        printf("Tipul numarului %d este %s\n", (int)(yyvsp[-2].valnr)->val, (yyvsp[-2].valnr)->tip->nume);
                                     }
-#line 2335 "y.tab.c"
+#line 2350 "y.tab.c"
     break;
 
   case 80: /* statement: TYPEOF '(' LIT ')' ';'  */
-#line 475 "proiect.y"
+#line 490 "proiect.y"
                                    { (yyval.tip)=NULL;
                                     printf("Tipul literei %s este char\n", (yyvsp[-2].strval));
                                     }
-#line 2343 "y.tab.c"
+#line 2358 "y.tab.c"
     break;
 
   case 81: /* statement: TYPEOF '(' lista_op ')' ';'  */
-#line 478 "proiect.y"
+#line 493 "proiect.y"
                                        { (yyval.tip)=NULL;
                                     printf("Tipul rezultatului operatiilor este %s\n", (yyvsp[-2].tip)->nume);
                                     }
-#line 2351 "y.tab.c"
+#line 2366 "y.tab.c"
     break;
 
   case 82: /* statement: RET NR ';'  */
-#line 481 "proiect.y"
+#line 496 "proiect.y"
                        { (yyval.tip)=(yyvsp[-1].valnr)->tip; }
-#line 2357 "y.tab.c"
+#line 2372 "y.tab.c"
     break;
 
   case 83: /* statement: RET LIT ';'  */
-#line 482 "proiect.y"
+#line 497 "proiect.y"
                        { struct tip_t *tip_expr=initTip_t("char"); (yyval.tip)=tip_expr; }
-#line 2363 "y.tab.c"
+#line 2378 "y.tab.c"
     break;
 
   case 84: /* statement: RET BVAL ';'  */
-#line 483 "proiect.y"
+#line 498 "proiect.y"
                          { struct tip_t *tip_expr=initTip_t("bool"); (yyval.tip)=tip_expr; }
-#line 2369 "y.tab.c"
+#line 2384 "y.tab.c"
     break;
 
   case 85: /* statement: RET VAR ';'  */
-#line 484 "proiect.y"
+#line 499 "proiect.y"
                         { (yyval.tip)=tipVar((yyvsp[-1].v));}
-#line 2375 "y.tab.c"
+#line 2390 "y.tab.c"
     break;
 
   case 89: /* lista_op: VAR operatie  */
-#line 490 "proiect.y"
+#line 505 "proiect.y"
                         { tipuriEgale((yyvsp[0].tip), tipVar((yyvsp[-1].v))); (yyval.tip)=(yyvsp[0].tip);}
-#line 2381 "y.tab.c"
+#line 2396 "y.tab.c"
     break;
 
   case 90: /* lista_op: NR operatie  */
-#line 491 "proiect.y"
+#line 506 "proiect.y"
                        {tipuriEgale((yyvsp[0].tip), initTip_t("float")); (yyval.tip)=(yyvsp[0].tip);}
-#line 2387 "y.tab.c"
+#line 2402 "y.tab.c"
     break;
 
   case 91: /* lista_op: apel operatie  */
-#line 492 "proiect.y"
+#line 507 "proiect.y"
                           { tipuriEgale((yyvsp[0].tip), (yyvsp[-1].tip)); }
-#line 2393 "y.tab.c"
+#line 2408 "y.tab.c"
     break;
 
   case 92: /* lista_op: lista_op operatie  */
-#line 493 "proiect.y"
+#line 508 "proiect.y"
                              {tipuriEgale((yyvsp[-1].tip),(yyvsp[0].tip));}
-#line 2399 "y.tab.c"
+#line 2414 "y.tab.c"
     break;
 
   case 93: /* lista_op: '(' lista_op ')' operatie  */
-#line 494 "proiect.y"
+#line 509 "proiect.y"
                                      {tipuriEgale((yyvsp[-2].tip),(yyvsp[0].tip)); (yyval.tip)=(yyvsp[-2].tip);}
-#line 2405 "y.tab.c"
+#line 2420 "y.tab.c"
     break;
 
   case 94: /* operatie: OP VAR  */
-#line 496 "proiect.y"
+#line 511 "proiect.y"
                   {(yyval.tip)=tipVar((yyvsp[0].v));}
-#line 2411 "y.tab.c"
+#line 2426 "y.tab.c"
     break;
 
   case 95: /* operatie: OP NR  */
-#line 497 "proiect.y"
+#line 512 "proiect.y"
                  {(yyval.tip)=(yyvsp[0].valnr)->tip;}
-#line 2417 "y.tab.c"
+#line 2432 "y.tab.c"
     break;
 
   case 96: /* operatie: OP apel  */
-#line 498 "proiect.y"
+#line 513 "proiect.y"
                    {(yyval.tip)=(yyvsp[0].tip);}
-#line 2423 "y.tab.c"
+#line 2438 "y.tab.c"
     break;
 
   case 102: /* apel: ID '(' lista_arg ')'  */
-#line 506 "proiect.y"
+#line 521 "proiect.y"
                             {
                          funDefinita((yyvsp[-3].strval),(yyvsp[-1].lista_param_t));
                          (yyval.tip)=tipRetFun((yyvsp[-3].strval));
                          }
-#line 2432 "y.tab.c"
+#line 2447 "y.tab.c"
     break;
 
   case 103: /* lista_arg: arg  */
-#line 511 "proiect.y"
+#line 526 "proiect.y"
                 {(yyval.lista_param_t) = initTipListParam((yyvsp[0].param_t));}
-#line 2438 "y.tab.c"
+#line 2453 "y.tab.c"
     break;
 
   case 104: /* lista_arg: lista_arg ',' arg  */
-#line 512 "proiect.y"
+#line 527 "proiect.y"
                               {
                                (yyval.lista_param_t)=(yyvsp[-2].lista_param_t);
                                while((yyvsp[-2].lista_param_t)->urmator)
                                    (yyvsp[-2].lista_param_t)=(yyvsp[-2].lista_param_t)->urmator;
                                (yyvsp[-2].lista_param_t)->urmator=initTipListParam((yyvsp[0].param_t));
                              }
-#line 2449 "y.tab.c"
+#line 2464 "y.tab.c"
     break;
 
   case 105: /* arg: VAR  */
-#line 519 "proiect.y"
+#line 534 "proiect.y"
           { 
             varNotConst((yyvsp[0].v)->nume);
             (yyval.param_t) = initTipParam(tipVar((yyvsp[0].v)),(yyvsp[0].v)->nume,0);
             }
-#line 2458 "y.tab.c"
+#line 2473 "y.tab.c"
     break;
 
   case 106: /* arg: VAR NEWVAL VAR  */
-#line 523 "proiect.y"
+#line 538 "proiect.y"
                      {
                    varNotConst((yyvsp[-2].v)->nume);
                    tipuriEgale(tipVar((yyvsp[0].v)), tipVar((yyvsp[-2].v))); 
                    (yyval.param_t) = initTipParam(tipVar((yyvsp[-2].v)),(yyvsp[-2].v)->nume,0);
                }
-#line 2468 "y.tab.c"
+#line 2483 "y.tab.c"
     break;
 
   case 107: /* arg: VAR NEWVAL NR  */
-#line 528 "proiect.y"
+#line 543 "proiect.y"
                     {
                    varNotConst((yyvsp[-2].v)->nume);
                    tipuriEgale((yyvsp[0].valnr)->tip, tipVar((yyvsp[-2].v)));
                    (yyval.param_t) = initTipParam(tipVar((yyvsp[-2].v)),(yyvsp[-2].v)->nume,0);
                }
-#line 2478 "y.tab.c"
+#line 2493 "y.tab.c"
     break;
 
   case 108: /* arg: apel  */
-#line 533 "proiect.y"
+#line 548 "proiect.y"
            { (yyval.param_t) = initTipParam((yyvsp[0].tip),"functie",0); }
-#line 2484 "y.tab.c"
+#line 2499 "y.tab.c"
     break;
 
   case 109: /* lista_cond: VAR cond  */
-#line 535 "proiect.y"
+#line 550 "proiect.y"
                       { tipuriEgale((yyvsp[0].tip), tipVar((yyvsp[-1].v))); }
-#line 2490 "y.tab.c"
+#line 2505 "y.tab.c"
     break;
 
   case 110: /* lista_cond: NR cond  */
-#line 536 "proiect.y"
+#line 551 "proiect.y"
                      { tipuriEgale((yyvsp[-1].valnr)->tip, (yyvsp[0].tip)); }
-#line 2496 "y.tab.c"
+#line 2511 "y.tab.c"
     break;
 
   case 111: /* lista_cond: BVAL cond  */
-#line 537 "proiect.y"
+#line 552 "proiect.y"
                        { struct tip_t *tip_expr=initTip_t("bool"); tipuriEgale(tip_expr, (yyvsp[0].tip)); }
-#line 2502 "y.tab.c"
+#line 2517 "y.tab.c"
     break;
 
   case 112: /* lista_cond: LIT cond  */
-#line 538 "proiect.y"
+#line 553 "proiect.y"
                       { struct tip_t *tip_expr=initTip_t("char"); tipuriEgale(tip_expr, (yyvsp[0].tip)); }
-#line 2508 "y.tab.c"
+#line 2523 "y.tab.c"
     break;
 
   case 113: /* lista_cond: apel cond  */
-#line 539 "proiect.y"
+#line 554 "proiect.y"
                        { tipuriEgale((yyvsp[0].tip), (yyvsp[-1].tip)); }
-#line 2514 "y.tab.c"
+#line 2529 "y.tab.c"
     break;
 
   case 114: /* lista_cond: lista_cond cond  */
-#line 540 "proiect.y"
+#line 555 "proiect.y"
                              {tipuriEgale((yyvsp[-1].tip),(yyvsp[0].tip));}
-#line 2520 "y.tab.c"
+#line 2535 "y.tab.c"
     break;
 
   case 115: /* lista_cond: '(' lista_cond ')' cond  */
-#line 541 "proiect.y"
+#line 556 "proiect.y"
                                      {tipuriEgale((yyvsp[-2].tip),(yyvsp[0].tip)); (yyval.tip)=(yyvsp[-2].tip);}
-#line 2526 "y.tab.c"
+#line 2541 "y.tab.c"
     break;
 
   case 116: /* cond: OP_C VAR  */
-#line 543 "proiect.y"
+#line 558 "proiect.y"
                 {(yyval.tip)=tipVar((yyvsp[0].v));}
-#line 2532 "y.tab.c"
+#line 2547 "y.tab.c"
     break;
 
   case 117: /* cond: OP_C NR  */
-#line 544 "proiect.y"
+#line 559 "proiect.y"
                { (yyval.tip)=(yyvsp[0].valnr)->tip; }
-#line 2538 "y.tab.c"
+#line 2553 "y.tab.c"
     break;
 
   case 118: /* cond: OP_C BVAL  */
-#line 545 "proiect.y"
+#line 560 "proiect.y"
                  { struct tip_t *tip_expr=initTip_t("bool"); (yyval.tip) = tip_expr;}
-#line 2544 "y.tab.c"
+#line 2559 "y.tab.c"
     break;
 
   case 119: /* cond: OP_C LIT  */
-#line 546 "proiect.y"
+#line 561 "proiect.y"
                 { struct tip_t *tip_expr=initTip_t("char"); (yyval.tip) = tip_expr;}
-#line 2550 "y.tab.c"
+#line 2565 "y.tab.c"
     break;
 
   case 127: /* NR: NRI  */
-#line 556 "proiect.y"
+#line 571 "proiect.y"
         { (yyval.valnr)=InitNr("int",(yyvsp[0].vali));}
-#line 2556 "y.tab.c"
+#line 2571 "y.tab.c"
     break;
 
   case 128: /* NR: MINUS NRI  */
-#line 557 "proiect.y"
+#line 572 "proiect.y"
               { (yyval.valnr)=InitNr("int",-(yyvsp[0].vali));}
-#line 2562 "y.tab.c"
+#line 2577 "y.tab.c"
     break;
 
   case 129: /* NR: MINUS NRF  */
-#line 558 "proiect.y"
+#line 573 "proiect.y"
               {(yyval.valnr)=InitNr("float",-(yyvsp[0].valf));}
-#line 2568 "y.tab.c"
+#line 2583 "y.tab.c"
     break;
 
   case 130: /* NR: NRF  */
-#line 559 "proiect.y"
+#line 574 "proiect.y"
         {(yyval.valnr)=InitNr("float",(yyvsp[0].valf));}
-#line 2574 "y.tab.c"
+#line 2589 "y.tab.c"
     break;
 
   case 131: /* lista_nr: NR  */
-#line 561 "proiect.y"
+#line 576 "proiect.y"
               {(yyval.lista_nr_t) = initTipListNr((yyvsp[0].valnr)); (yyval.lista_nr_t)->lg=1;}
-#line 2580 "y.tab.c"
+#line 2595 "y.tab.c"
     break;
 
   case 132: /* lista_nr: lista_nr ',' NR  */
-#line 562 "proiect.y"
+#line 577 "proiect.y"
                              {
-                               tipuriEgale((yyvsp[-2].lista_nr_t)->tip,(yyvsp[0].valnr)->tip);
-                               (yyval.lista_nr_t)=initTipListNr((yyvsp[0].valnr));
+                               (yyval.lista_nr_t)=(yyvsp[-2].lista_nr_t);
                                (yyval.lista_nr_t)->lg=(yyvsp[-2].lista_nr_t)->lg+1;
-                               (yyvsp[-2].lista_nr_t)->urmator=(yyval.lista_nr_t);
+                               while((yyvsp[-2].lista_nr_t)->urmator)
+                               {
+                                   (yyvsp[-2].lista_nr_t)=(yyvsp[-2].lista_nr_t)->urmator;
+                                   (yyvsp[-2].lista_nr_t)->lg+=1;
+                               }
+                               (yyvsp[-2].lista_nr_t)->urmator=initTipListNr((yyvsp[0].valnr));
                              }
-#line 2591 "y.tab.c"
+#line 2610 "y.tab.c"
     break;
 
   case 133: /* lista_lit: LIT  */
-#line 569 "proiect.y"
+#line 588 "proiect.y"
                  {(yyval.lista_lit_t) = initTipListLit((yyvsp[0].strval)); (yyval.lista_lit_t)->lg=1;}
-#line 2597 "y.tab.c"
+#line 2616 "y.tab.c"
     break;
 
   case 134: /* lista_lit: lista_lit ',' LIT  */
-#line 570 "proiect.y"
+#line 589 "proiect.y"
                                {
                                (yyval.lista_lit_t)=initTipListLit((yyvsp[0].strval));
                                (yyval.lista_lit_t)->lg=(yyvsp[-2].lista_lit_t)->lg+1;
                                (yyvsp[-2].lista_lit_t)->urmator=(yyval.lista_lit_t);
                              }
-#line 2607 "y.tab.c"
+#line 2626 "y.tab.c"
     break;
 
 
-#line 2611 "y.tab.c"
+#line 2630 "y.tab.c"
 
       default: break;
     }
@@ -2800,7 +2819,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 580 "proiect.y"
+#line 599 "proiect.y"
 
 int yyerror(char * s){
 printf("eroare: %s la linia:%d\n",s,yylineno);
@@ -2820,7 +2839,7 @@ void checkTable(char* nume){
                 printf("din functia %s ", functie_curenta);
             if (structura_curenta != NULL)
                 printf("din structura %s ", structura_curenta);
-            printf("deja există\n");
+            printf("Linia %d: Variabila/Structura deja exista\n",yylineno);
             corect = 0;
             //exit(0);
             break;
@@ -2899,14 +2918,14 @@ void posInt(struct valnr_t* val){
     if(val->val<0)
     {
         corect=0;
-        printf("Valoarea indicelui trebuie sa fie pozitiva\n");
+        printf("Linia %d: Valoarea indicelui trebuie sa fie pozitiva\n",yylineno);
     }
 }
 void lungimiEgale(int x, int y){
     if(x==y)
         return;
     corect=0;
-    printf("Numarul de elemente nu este egal cu lungimea vectorului\n"); 
+    printf("Linia %d: Numarul de elemente nu este egal cu lungimea vectorului\n",yylineno); 
 }
 void printTable(){
   fisier_tabela = fopen("symbol_table.txt", "w");
@@ -2921,7 +2940,7 @@ void printTable(){
         if (SymbolTable[i].functie != NULL)
         {   
             fprintf(fisier_tabela, "locala\t");
-            fprintf(fisier_tabela, "în func %s\t", SymbolTable[i].functie);
+            fprintf(fisier_tabela, "in func %s\t", SymbolTable[i].functie);
             fprintf(fisier_tabela, "\n");
         }
       } 
@@ -2980,8 +2999,8 @@ bool varDefinita(char *nume) {
         }
     }
     corect = 0;
-    printf("Variabila %s nu a fost definită\n", nume);
-    //exit(0);
+    printf("Linia %d: Variabila %s nu a fost definita\n",yylineno,nume);
+    sfarsesteProgram();
     return 0;
 }
 
@@ -2992,7 +3011,7 @@ void funDefinita(char *nume, struct lista_param_t *arg) {
             if ((SymbolTable[i].structura != NULL && structura_curenta != NULL &&
                 strcmp(SymbolTable[i].structura, structura_curenta) == 0)||SymbolTable[i].structura == NULL)
                  if(!apelCorect(arg,SymbolTable[i].param)){
-                     printf("În apelul funcției %s numărul de argumente este greșit\n", nume);
+                     printf("Linia %d: In apelul functiei %s numarul de argumente este gresit\n",yylineno, nume);
                      //exit(0);
                  }
                  else
@@ -3001,8 +3020,8 @@ void funDefinita(char *nume, struct lista_param_t *arg) {
         }
     }
     corect = 0;
-    printf("Funcția %s nu a fost definită\n", nume);
-    //exit(0);
+    printf("Linia %d: Functia %s nu a fost definita\n",yylineno, nume);
+    sfarsesteProgram();
 }
 bool apelCorect(struct lista_param_t * arg, struct lista_param_t *param) {
     while (param != NULL && arg != NULL) {
@@ -3030,8 +3049,8 @@ bool structDefinita(char *nume) {
         }
     }
     corect = 0;
-    printf("Structura %s nu a fost definită\n", nume);
-    //exit(0);
+    printf("Linia %d: Structura %s nu a fost definita\n",yylineno, nume);
+    sfarsesteProgram();
     return 0;
 }
 
@@ -3098,6 +3117,7 @@ void tipuriEgale(struct tip_t *stanga, struct tip_t *dreapta) {
     }
     if (egale == 0) {
         corect = 0;
+        printf("Linia %d: ",yylineno);
         printTip(stdout, stanga);
         printf(" nu este compatibil cu ");
         printTip(stdout, dreapta);
@@ -3109,7 +3129,7 @@ void varNotConst (char *nume){
     if(varDefinita(nume)==0 && corect)
     {
         corect=0;
-        printf("Valoarea lui %s nu poate fi schimbata\n", nume);
+        printf("Linia %d: Valoarea lui %s nu poate fi schimbata\n",yylineno, nume);
         //exit(0);
     } 
 }
@@ -3117,7 +3137,7 @@ void isStruct(char * nume){
     if(!structDefinita(nume))
     {
         corect=0;
-        printf("%s nu e usertype\n", nume);
+        printf("Linia %d: %s nu e usertype\n",yylineno, nume);
         //exit(0);
     }
 
@@ -3183,6 +3203,13 @@ struct valnr_t *InitNr(char * tip, float val)
     expr->val=val;
     return expr;
 }
+
+void sfarsesteProgram(){
+    printf("Sintaxa corecta!\n");
+    printf("O eroare fatala a fost receptionata la linia %d!\n",yylineno);
+    exit(0);
+}
+
 int main(int argc, char** argv){
      yyin=fopen(argv[1],"r");
      yyparse();

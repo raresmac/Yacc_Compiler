@@ -12,6 +12,7 @@ int corect = 1;
 /* TO DO
 1) implementare eval() (doar pt int uri)
 2) free memory? vezi val1 de la lab
+3) bug in care valoarea floatului nu e citita corect (vezi typeof-ul din exemplu)
 OBS:
 -TESTING
 -lista_op si lista_cond sa permita paranteze cum trebuie..nu am testat prea mult
@@ -92,6 +93,7 @@ void insertVarListTable(struct lista_param_t *var);
 void insertFuncTable(char *nume, struct tip_t *ret, struct lista_param_t *param);
 void insertStructTable(char *nume, struct lista_param_t *param);
 void printTable();
+void sfarsesteProgram();
 void isStruct(char * nume);
 bool varDefinita(char *nume);
 void funDefinita(char *nume, struct lista_param_t *arg);
@@ -130,7 +132,7 @@ void tipuriEgale(struct tip_t *stanga, struct tip_t *dreapta);
 
 %%
 progr : optionale bloc{
-                       printf("Sintaxă corectă\n");
+                       printf("Sintaxa corecta\n");
                        if (corect) {
                          printf("Corect semantic\n");
                          printTable();
@@ -200,7 +202,7 @@ declaratie : TIP ID ASSIGN LIT{
                               }
            | TIP ID '[' NR ']' ASSIGN '{' lista_lit '}'{
                               if($4->val < 1){
-                                printf("Dimensiunea nu este pozitiva!\n");
+                                printf("Linia %d: Dimensiunea nu este pozitiva!\n",yylineno);
                                 //exit(0);
                               }
                               posInt($4);
@@ -213,7 +215,7 @@ declaratie : TIP ID ASSIGN LIT{
                               }
            | CONST TIP ID '[' NR ']' ASSIGN '{' lista_lit '}'{
                               if($5->val < 1){
-                                printf("Dimensiunea nu este pozitiva!\n");
+                                printf("Linia %d: Dimensiunea nu este pozitiva!\n",yylineno);
                                 //exit(0);
                               }
                               posInt($5);
@@ -260,7 +262,7 @@ declaratie : TIP ID ASSIGN LIT{
                               }      
            | TIP ID '[' NR ']'{
                               if($4->val < 1){
-                                printf("Dimensiunea nu este pozitiva!\n");
+                                printf("Linia %d: Dimensiunea nu este pozitiva!\n",yylineno);
                                 //exit(0);
                               }
                               posInt($4);
@@ -270,7 +272,7 @@ declaratie : TIP ID ASSIGN LIT{
                               }
            | TIP ID '[' NR ']' ASSIGN '{' lista_nr '}'{
                               if($4->val < 1){
-                                printf("Dimensiunea nu este pozitiva!\n");
+                                printf("Linia %d: Dimensiunea nu este pozitiva!\n",yylineno);
                                 //exit(0);
                               }
                               posInt($4);
@@ -288,7 +290,7 @@ declaratie : TIP ID ASSIGN LIT{
                               }
            | CONST TIP ID '[' NR ']' ASSIGN '{' lista_nr '}'{
                               if($5->val < 1){
-                                printf("Dimensiunea nu este pozitiva!\n");
+                                printf("Linia %d: Dimensiunea nu este pozitiva!\n",yylineno);
                                 //exit(0);
                               }
                               posInt($5);
@@ -344,12 +346,16 @@ declaratie_fct : TIP ID '(' lista_param ')'{
                $$=$1;
            }
           ;
-lista_param : param {$$ = initTipListParam($1);}
+lista_param : param {
+                    $$ = initTipListParam($1);
+                    //free($1);
+                    }
             | lista_param ',' param {
                                $$=$1;
                                while($1->urmator)
                                    $1=$1->urmator;
                                $1->urmator=initTipListParam($3);
+                               //free($3);
                              }
             ;
 param : TIP ID { $$ = initTipParam($1,$2,0); }
@@ -364,7 +370,7 @@ VAR : SVAR {structura_curenta=NULL;}
           isStruct(tipVar($1)->nume);
           $$=initVar($1->nume, -1, $3);
           if(tipVar($$)->dimensiune){
-            printf("%s e vector, trebuie apelat un element al lui\n",$1->nume);
+            printf("Linia %d: %s e vector, trebuie apelat un element al lui\n",yylineno,$1->nume);
             //exit(0);
          }
        }
@@ -373,7 +379,7 @@ SVAR : ID {
          $$=initVar($1, -1, 0);
          varDefinita($1);
          if(tipVar($$)->dimensiune){
-            printf("%s e vector, trebuie apelat un element al lui\n",$1);
+            printf("Linia %d: %s e vector, trebuie apelat un element al lui\n",yylineno,$1);
             corect=0;
             //exit(0);
          }
@@ -383,13 +389,13 @@ SVAR : ID {
          $$=initVar($1, $3->val, 0);
          varDefinita($1);
          if(!tipVar($$)->dimensiune){
-            printf("%s nu e vector, nu puteti apela un element al lui\n",$1);
+            printf("Linia %d: %s nu e vector, nu puteti apela un element al lui\n",yylineno,$1);
             corect=0;
             //exit(0);
          }
          posInt($3);
          if(tipVar($$)->dimensiune<$3->val){
-            printf("Warning: Lungimea vectorului %s e mai mica decat indicele dat\n",$1);
+            printf("Linia %d: Lungimea vectorului %s e mai mica decat indicele dat\n",yylineno,$1);
             //exit(0);
          }
          structura_curenta=tipVar($$)->nume;
@@ -400,15 +406,15 @@ SVAR : ID {
          $$=initVar($1, 1, 0);
          varDefinita($1); 
          if(!tipVar($$)->dimensiune){
-            printf("%s nu e vector, nu puteti apela un element al lui\n",$1);
+            printf("Linia %d: %s nu e vector, nu puteti apela un element al lui\n",yylineno,$1);
             corect=0;
             //exit(0);
          }
          else
-               printf("Warning: Asigurativa ca %s e positiv si <= %d \n",$3->nume, tipVar($$)->dimensiune);
+               printf("Linia %d: Asigurati-va ca %s e positiv si <= %d \n",yylineno,$3->nume, tipVar($$)->dimensiune);
          /*posInt($3); but for var
          if(tipVar($$)->dimensiune<$3->val){
-            printf("Lungimea vectorului %s e mai mica decat indicele dat\n",$1->nume);
+            printf("Linia %d: Lungimea vectorului %s e mai mica decat indicele dat\n",yylineno,$1->nume);
             //exit(0);
          }*/
          structura_curenta=tipVar($$)->nume;
@@ -464,7 +470,7 @@ statement : VAR NEWVAL VAR ';' {
                                struct tip_t *tip_expr=initTip_t("int");
                                tipuriEgale($3->tip, tip_expr); 
                                if (corect){ printf("Rezultatul expresiei din eval este %f\n", $3->val); }
-                               else {printf("Valorile nu sunt de tip int\n");} $$=NULL;
+                               else {printf("Linia %d: Valorile nu sunt de tip int\n",yylineno);} $$=NULL;
                                }
           | EVAL '(' lista_op ')' ';' {$$=NULL;}
           | TYPEOF '(' VAR ')' ';'  {
@@ -476,10 +482,10 @@ statement : VAR NEWVAL VAR ';' {
                                     }
           | TYPEOF '(' NR ')' ';' {
                                     $$=NULL;
-                                    if(strcmp($3->tip->nume,"int")==0)
-                                        printf("Tipul numarului %d este %s\n", (int)$3->val, $3->tip->nume);
-                                    else
+                                    if(strcmp($3->tip->nume,"int"))
                                         printf("Tipul numarului %f este %s\n", $3->val, $3->tip->nume);
+                                    else
+                                        printf("Tipul numarului %d este %s\n", (int)$3->val, $3->tip->nume);
                                     }
           | TYPEOF '(' LIT ')' ';' { $$=NULL;
                                     printf("Tipul literei %s este char\n", $3);
@@ -609,7 +615,7 @@ void checkTable(char* nume){
                 printf("din functia %s ", functie_curenta);
             if (structura_curenta != NULL)
                 printf("din structura %s ", structura_curenta);
-            printf("deja există\n");
+            printf("Linia %d: Variabila/Structura deja exista\n",yylineno);
             corect = 0;
             //exit(0);
             break;
@@ -688,14 +694,14 @@ void posInt(struct valnr_t* val){
     if(val->val<0)
     {
         corect=0;
-        printf("Valoarea indicelui trebuie sa fie pozitiva\n");
+        printf("Linia %d: Valoarea indicelui trebuie sa fie pozitiva\n",yylineno);
     }
 }
 void lungimiEgale(int x, int y){
     if(x==y)
         return;
     corect=0;
-    printf("Numarul de elemente nu este egal cu lungimea vectorului\n"); 
+    printf("Linia %d: Numarul de elemente nu este egal cu lungimea vectorului\n",yylineno); 
 }
 void printTable(){
   fisier_tabela = fopen("symbol_table.txt", "w");
@@ -710,7 +716,7 @@ void printTable(){
         if (SymbolTable[i].functie != NULL)
         {   
             fprintf(fisier_tabela, "locala\t");
-            fprintf(fisier_tabela, "în func %s\t", SymbolTable[i].functie);
+            fprintf(fisier_tabela, "in func %s\t", SymbolTable[i].functie);
             fprintf(fisier_tabela, "\n");
         }
       } 
@@ -769,8 +775,8 @@ bool varDefinita(char *nume) {
         }
     }
     corect = 0;
-    printf("Variabila %s nu a fost definită\n", nume);
-    //exit(0);
+    printf("Linia %d: Variabila %s nu a fost definita\n",yylineno,nume);
+    sfarsesteProgram();
     return 0;
 }
 
@@ -781,7 +787,7 @@ void funDefinita(char *nume, struct lista_param_t *arg) {
             if ((SymbolTable[i].structura != NULL && structura_curenta != NULL &&
                 strcmp(SymbolTable[i].structura, structura_curenta) == 0)||SymbolTable[i].structura == NULL)
                  if(!apelCorect(arg,SymbolTable[i].param)){
-                     printf("În apelul funcției %s numărul de argumente este greșit\n", nume);
+                     printf("Linia %d: In apelul functiei %s numarul de argumente este gresit\n",yylineno, nume);
                      //exit(0);
                  }
                  else
@@ -790,8 +796,8 @@ void funDefinita(char *nume, struct lista_param_t *arg) {
         }
     }
     corect = 0;
-    printf("Funcția %s nu a fost definită\n", nume);
-    //exit(0);
+    printf("Linia %d: Functia %s nu a fost definita\n",yylineno, nume);
+    sfarsesteProgram();
 }
 bool apelCorect(struct lista_param_t * arg, struct lista_param_t *param) {
     while (param != NULL && arg != NULL) {
@@ -819,8 +825,8 @@ bool structDefinita(char *nume) {
         }
     }
     corect = 0;
-    printf("Structura %s nu a fost definită\n", nume);
-    //exit(0);
+    printf("Linia %d: Structura %s nu a fost definita\n",yylineno, nume);
+    sfarsesteProgram();
     return 0;
 }
 
@@ -887,6 +893,7 @@ void tipuriEgale(struct tip_t *stanga, struct tip_t *dreapta) {
     }
     if (egale == 0) {
         corect = 0;
+        printf("Linia %d: ",yylineno);
         printTip(stdout, stanga);
         printf(" nu este compatibil cu ");
         printTip(stdout, dreapta);
@@ -898,7 +905,7 @@ void varNotConst (char *nume){
     if(varDefinita(nume)==0 && corect)
     {
         corect=0;
-        printf("Valoarea lui %s nu poate fi schimbata\n", nume);
+        printf("Linia %d: Valoarea lui %s nu poate fi schimbata\n",yylineno, nume);
         //exit(0);
     } 
 }
@@ -906,7 +913,7 @@ void isStruct(char * nume){
     if(!structDefinita(nume))
     {
         corect=0;
-        printf("%s nu e usertype\n", nume);
+        printf("Linia %d: %s nu e usertype\n",yylineno, nume);
         //exit(0);
     }
 
@@ -972,6 +979,13 @@ struct valnr_t *InitNr(char * tip, float val)
     expr->val=val;
     return expr;
 }
+
+void sfarsesteProgram(){
+    printf("Sintaxa corecta!\n");
+    printf("O eroare fatala a fost receptionata la linia %d!\n",yylineno);
+    exit(0);
+}
+
 int main(int argc, char** argv){
      yyin=fopen(argv[1],"r");
      yyparse();
