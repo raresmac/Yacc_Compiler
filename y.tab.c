@@ -1818,7 +1818,7 @@ yyreduce:
                                                        {
                               if((yyvsp[-5].valnr)->val < 1){
                                 printf("Dimensiunea nu este pozitiva!\n");
-                                exit(0);
+                                //exit(0);
                               }
                               posInt((yyvsp[-5].valnr));
                               lungimiEgale((yyvsp[-5].valnr)->val,(yyvsp[-1].lista_lit_t)->lg);
@@ -1836,7 +1836,7 @@ yyreduce:
                                                              {
                               if((yyvsp[-5].valnr)->val < 1){
                                 printf("Dimensiunea nu este pozitiva!\n");
-                                exit(0);
+                                //exit(0);
                               }
                               posInt((yyvsp[-5].valnr));
                               lungimiEgale((yyvsp[-5].valnr)->val,(yyvsp[-1].lista_lit_t)->lg);
@@ -1917,7 +1917,7 @@ yyreduce:
                               {
                               if((yyvsp[-1].valnr)->val < 1){
                                 printf("Dimensiunea nu este pozitiva!\n");
-                                exit(0);
+                                //exit(0);
                               }
                               posInt((yyvsp[-1].valnr));
                               (yyvsp[-4].tip)->dimensiune = (yyvsp[-1].valnr)->val;
@@ -1932,7 +1932,7 @@ yyreduce:
                                                       {
                               if((yyvsp[-5].valnr)->val < 1){
                                 printf("Dimensiunea nu este pozitiva!\n");
-                                exit(0);
+                                //exit(0);
                               }
                               posInt((yyvsp[-5].valnr));
                               lungimiEgale((yyvsp[-5].valnr)->val,(yyvsp[-1].lista_nr_t)->lg);
@@ -1960,7 +1960,7 @@ yyreduce:
                                                             {
                               if((yyvsp[-5].valnr)->val < 1){
                                 printf("Dimensiunea nu este pozitiva!\n");
-                                exit(0);
+                                //exit(0);
                               }
                               posInt((yyvsp[-5].valnr));
                               lungimiEgale((yyvsp[-5].valnr)->val,(yyvsp[-1].lista_nr_t)->lg);
@@ -2120,7 +2120,7 @@ yyreduce:
           (yyval.v)=initVar((yyvsp[-2].v)->nume, -1, (yyvsp[0].v));
           if(tipVar((yyval.v))->dimensiune){
             printf("Incorect semantic!");
-            exit(0);
+            //exit(0);
          }
        }
 #line 2127 "y.tab.c"
@@ -2133,7 +2133,7 @@ yyreduce:
          varDefinita((yyvsp[0].strval));
          if(tipVar((yyval.v))->dimensiune){
             printf("Incorect semantic!");
-            exit(0);
+            //exit(0);
          }
          structura_curenta=tipVar((yyval.v))->nume;
          }
@@ -2147,12 +2147,12 @@ yyreduce:
          varDefinita((yyvsp[-3].strval));
          if(!tipVar((yyval.v))->dimensiune){
             printf("Incorect semantic!");
-            exit(0);
+            //exit(0);
          }
          posInt((yyvsp[-1].valnr));
          if(tipVar((yyval.v))->dimensiune<(yyvsp[-1].valnr)->val){
             printf("Incorect semantic!");
-            exit(0);
+            //exit(0);
          }
          structura_curenta=tipVar((yyval.v))->nume;
          }
@@ -2168,12 +2168,12 @@ yyreduce:
          varDefinita((yyvsp[-3].strval)); 
          if(!tipVar((yyval.v))->dimensiune){
             printf("Incorect semantic!");
-            exit(0);
+            //exit(0);
          }
          /*posInt($3); but for var
          if(tipVar($$)->dimensiune<$3->val){
             printf("Incorect semantic!");
-            exit(0);
+            //exit(0);
          }*/
          structura_curenta=tipVar((yyval.v))->nume;
          }
@@ -2822,7 +2822,7 @@ void checkTable(char* nume){
                 printf("din structura %s ", structura_curenta);
             printf("deja există\n");
             corect = 0;
-            exit(0);
+            //exit(0);
             break;
         }
     }
@@ -2981,7 +2981,7 @@ bool varDefinita(char *nume) {
     }
     corect = 0;
     printf("Variabila %s nu a fost definită\n", nume);
-    exit(0);
+    //exit(0);
     return 0;
 }
 
@@ -2993,7 +2993,7 @@ void funDefinita(char *nume, struct lista_param_t *arg) {
                 strcmp(SymbolTable[i].structura, structura_curenta) == 0)||SymbolTable[i].structura == NULL)
                  if(!apelCorect(arg,SymbolTable[i].param)){
                      printf("În apelul funcției %s numărul de argumente este greșit\n", nume);
-                     exit(0);
+                     //exit(0);
                  }
                  else
                      return;
@@ -3002,7 +3002,7 @@ void funDefinita(char *nume, struct lista_param_t *arg) {
     }
     corect = 0;
     printf("Funcția %s nu a fost definită\n", nume);
-    exit(0);
+    //exit(0);
 }
 bool apelCorect(struct lista_param_t * arg, struct lista_param_t *param) {
     while (param != NULL && arg != NULL) {
@@ -3012,7 +3012,7 @@ bool apelCorect(struct lista_param_t * arg, struct lista_param_t *param) {
     }
     if (param != NULL || arg != NULL) {
         corect = 0;
-        exit(0);
+        //exit(0);
         return 0;
     }
     return 1;
@@ -3031,7 +3031,7 @@ bool structDefinita(char *nume) {
     }
     corect = 0;
     printf("Structura %s nu a fost definită\n", nume);
-    exit(0);
+    //exit(0);
     return 0;
 }
 
@@ -3102,7 +3102,7 @@ void tipuriEgale(struct tip_t *stanga, struct tip_t *dreapta) {
         printf(" nu este compatibil cu ");
         printTip(stdout, dreapta);
         printf("\n");
-        exit(0);
+        //exit(0);
     }
 }
 void varNotConst (char *nume){
@@ -3110,7 +3110,7 @@ void varNotConst (char *nume){
     {
         corect=0;
         printf("Valoarea lui %s nu poate fi schimbata\n", nume);
-        exit(0);
+        //exit(0);
     } 
 }
 void isStruct(char * nume){
@@ -3118,7 +3118,7 @@ void isStruct(char * nume){
     {
         corect=0;
         printf("%s nu e usertype\n", nume);
-        exit(0);
+        //exit(0);
     }
 
 }

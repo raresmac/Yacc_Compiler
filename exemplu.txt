@@ -16,8 +16,9 @@ incepe
     int y := 3 ;
     int x;
     TypeOf('a');
-    int l[4.5];
+    int l[-4.5];
     utip nice z;
+    pro := 756;
     z.st:=0;
     if(tru==adevarat)
         {y devine functieFaina(x);}

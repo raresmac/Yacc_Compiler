@@ -200,7 +200,7 @@ declaratie : TIP ID ASSIGN LIT{
            | TIP ID '[' NR ']' ASSIGN '{' lista_lit '}'{
                               if($4->val < 1){
                                 printf("Dimensiunea nu este pozitiva!\n");
-                                exit(0);
+                                //exit(0);
                               }
                               posInt($4);
                               lungimiEgale($4->val,$8->lg);
@@ -213,7 +213,7 @@ declaratie : TIP ID ASSIGN LIT{
            | CONST TIP ID '[' NR ']' ASSIGN '{' lista_lit '}'{
                               if($5->val < 1){
                                 printf("Dimensiunea nu este pozitiva!\n");
-                                exit(0);
+                                //exit(0);
                               }
                               posInt($5);
                               lungimiEgale($5->val,$9->lg);
@@ -260,7 +260,7 @@ declaratie : TIP ID ASSIGN LIT{
            | TIP ID '[' NR ']'{
                               if($4->val < 1){
                                 printf("Dimensiunea nu este pozitiva!\n");
-                                exit(0);
+                                //exit(0);
                               }
                               posInt($4);
                               $1->dimensiune = $4->val;
@@ -270,7 +270,7 @@ declaratie : TIP ID ASSIGN LIT{
            | TIP ID '[' NR ']' ASSIGN '{' lista_nr '}'{
                               if($4->val < 1){
                                 printf("Dimensiunea nu este pozitiva!\n");
-                                exit(0);
+                                //exit(0);
                               }
                               posInt($4);
                               lungimiEgale($4->val,$8->lg);
@@ -288,7 +288,7 @@ declaratie : TIP ID ASSIGN LIT{
            | CONST TIP ID '[' NR ']' ASSIGN '{' lista_nr '}'{
                               if($5->val < 1){
                                 printf("Dimensiunea nu este pozitiva!\n");
-                                exit(0);
+                                //exit(0);
                               }
                               posInt($5);
                               lungimiEgale($5->val,$9->lg);
@@ -364,7 +364,7 @@ VAR : SVAR {structura_curenta=NULL;}
           $$=initVar($1->nume, -1, $3);
           if(tipVar($$)->dimensiune){
             printf("Incorect semantic!");
-            exit(0);
+            //exit(0);
          }
        }
      ;
@@ -373,7 +373,7 @@ SVAR : ID {
          varDefinita($1);
          if(tipVar($$)->dimensiune){
             printf("Incorect semantic!");
-            exit(0);
+            //exit(0);
          }
          structura_curenta=tipVar($$)->nume;
          }
@@ -382,12 +382,12 @@ SVAR : ID {
          varDefinita($1);
          if(!tipVar($$)->dimensiune){
             printf("Incorect semantic!");
-            exit(0);
+            //exit(0);
          }
          posInt($3);
          if(tipVar($$)->dimensiune<$3->val){
             printf("Incorect semantic!");
-            exit(0);
+            //exit(0);
          }
          structura_curenta=tipVar($$)->nume;
          }
@@ -398,12 +398,12 @@ SVAR : ID {
          varDefinita($1); 
          if(!tipVar($$)->dimensiune){
             printf("Incorect semantic!");
-            exit(0);
+            //exit(0);
          }
          /*posInt($3); but for var
          if(tipVar($$)->dimensiune<$3->val){
             printf("Incorect semantic!");
-            exit(0);
+            //exit(0);
          }*/
          structura_curenta=tipVar($$)->nume;
          }
@@ -598,7 +598,7 @@ void checkTable(char* nume){
                 printf("din structura %s ", structura_curenta);
             printf("deja există\n");
             corect = 0;
-            exit(0);
+            //exit(0);
             break;
         }
     }
@@ -757,7 +757,7 @@ bool varDefinita(char *nume) {
     }
     corect = 0;
     printf("Variabila %s nu a fost definită\n", nume);
-    exit(0);
+    //exit(0);
     return 0;
 }
 
@@ -769,7 +769,7 @@ void funDefinita(char *nume, struct lista_param_t *arg) {
                 strcmp(SymbolTable[i].structura, structura_curenta) == 0)||SymbolTable[i].structura == NULL)
                  if(!apelCorect(arg,SymbolTable[i].param)){
                      printf("În apelul funcției %s numărul de argumente este greșit\n", nume);
-                     exit(0);
+                     //exit(0);
                  }
                  else
                      return;
@@ -778,7 +778,7 @@ void funDefinita(char *nume, struct lista_param_t *arg) {
     }
     corect = 0;
     printf("Funcția %s nu a fost definită\n", nume);
-    exit(0);
+    //exit(0);
 }
 bool apelCorect(struct lista_param_t * arg, struct lista_param_t *param) {
     while (param != NULL && arg != NULL) {
@@ -788,7 +788,7 @@ bool apelCorect(struct lista_param_t * arg, struct lista_param_t *param) {
     }
     if (param != NULL || arg != NULL) {
         corect = 0;
-        exit(0);
+        //exit(0);
         return 0;
     }
     return 1;
@@ -807,7 +807,7 @@ bool structDefinita(char *nume) {
     }
     corect = 0;
     printf("Structura %s nu a fost definită\n", nume);
-    exit(0);
+    //exit(0);
     return 0;
 }
 
@@ -878,7 +878,7 @@ void tipuriEgale(struct tip_t *stanga, struct tip_t *dreapta) {
         printf(" nu este compatibil cu ");
         printTip(stdout, dreapta);
         printf("\n");
-        exit(0);
+        //exit(0);
     }
 }
 void varNotConst (char *nume){
@@ -886,7 +886,7 @@ void varNotConst (char *nume){
     {
         corect=0;
         printf("Valoarea lui %s nu poate fi schimbata\n", nume);
-        exit(0);
+        //exit(0);
     } 
 }
 void isStruct(char * nume){
@@ -894,7 +894,7 @@ void isStruct(char * nume){
     {
         corect=0;
         printf("%s nu e usertype\n", nume);
-        exit(0);
+        //exit(0);
     }
 
 }
