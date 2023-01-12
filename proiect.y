@@ -556,13 +556,13 @@ arg : VAR {
                }
     | apel { $$ = initTipParam($1,"functie",0); } //to check is functie const
     ;
-lista_cond : VAR cond { tipuriEgale($2, tipVar($1)); }
-           | NR cond { tipuriEgale($1->tip, $2); }
-           | BVAL cond { struct tip_t *tip_expr=initTip_t("bool"); tipuriEgale(tip_expr, $2); }
-           | LIT cond { struct tip_t *tip_expr=initTip_t("char"); tipuriEgale(tip_expr, $2); }
-           | apel cond { tipuriEgale($2, $1); }
-           | lista_cond cond {tipuriEgale($1,$2);}
-           | '(' lista_cond ')' cond {tipuriEgale($2,$4); $$=$2;}
+lista_cond : VAR cond { tipuriEgale($2, tipVar($1)); $$=$2;}
+           | NR cond { tipuriEgale($1->tip, $2); $$=$2;}
+           | BVAL cond { struct tip_t *tip_expr=initTip_t("bool"); tipuriEgale(tip_expr, $2); $$=$2;}
+           | LIT cond { struct tip_t *tip_expr=initTip_t("char"); tipuriEgale(tip_expr, $2); $$=$2;}
+           | apel cond { tipuriEgale($2, $1); $$=$2;}
+           | lista_cond cond {tipuriEgale($1,$2);$$=$2;}
+           | '(' lista_cond ')' cond {tipuriEgale($2,$4); $$=$4;}
            ;
 cond : OP_C VAR {$$=tipVar($2);}
      | OP_C NR { $$=$2->tip; }
