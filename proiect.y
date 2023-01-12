@@ -10,7 +10,7 @@ char *functie_curenta = NULL;
 char *structura_curenta = NULL;
 int corect = 1;
 /* TO DO
-1) implementare typeof() si eval() (eval doar pt int uri)
+1) implementare eval() (eval doar pt int uri)
 ^ plz u
 astea pot si eu:
 2) VAR: verificat ca id[nr]: id e vector | id: id nu e vector
@@ -48,7 +48,7 @@ struct tip_t {
 };
 struct valnr_t {
     struct tip_t *tip;
-    float val;
+    int val;//crezi ca e obligatoriu sa fie float? nu de alta, dar eval da rau
 };
 struct param_t
 {
@@ -114,7 +114,7 @@ void tipuriEgale(struct tip_t *stanga, struct tip_t *dreapta);
     struct tip_t* tip;
 };
 
-%token <strval> LIT ID INT FLOAT CHAR BOOL STRING NEWTYPE IF ELSE WHILE FOR BGIN END DEFINE CONST TYPEOF GR LW ASSIGN PLUS MINUS ADD DEDUCT EQUAL DIV MOD AND OR NOT XOR EVAL MAIN TRU FALS RET UTYPE
+%token <strval> LIT ID INT FLOAT CHAR BOOL STRING NEWTYPE IF ELSE WHILE FOR BGIN END DEFINE CONST TYPEOF GR LW ASSIGN PLUS TIMES MINUS ADD DEDUCT EQUAL DIV MOD AND OR NOT XOR EVAL MAIN TRU FALS RET UTYPE
 %token <vali> NRI
 %token <valf> NRF
 %type <vali> BVAL
@@ -130,13 +130,13 @@ void tipuriEgale(struct tip_t *stanga, struct tip_t *dreapta);
 
 %%
 progr : optionale bloc{
-                       printf("Sintaxă corectă\n");
-                       if (corect) {
-                         printf("Corect semantic\n");
-                         printTable();
-                       }
-                       else
-                       printf("Incorect semantic\n");
+                        printf("Sintaxă corectă\n");
+                        if (corect) {
+                            printf("Corect semantic\n");
+                            printTable();
+                        }
+                        else
+                            printf("Incorect semantic\n");
                    }
       ;
 optionale : var_globale functii user_types {functie_curenta="main";}
@@ -187,7 +187,7 @@ declaratie : TIP ID ASSIGN LIT{
                               }
            | TIP ID '[' ']' ASSIGN '{' lista_lit '}'{
                               structDefinita($1->nume);
-                              struct tip_t *tip_expr=initTip_t("char");
+                              struct tip_t *tip_expr=initTip_t("char");//nu trebuie tot string aici? la fel si mai jos
                               tipuriEgale(tip_expr, $1);
                               $$ = initTipParam($1,$2,0);
                               }
@@ -238,25 +238,30 @@ declaratie : TIP ID ASSIGN LIT{
            
            | TIP ID '[' ']' ASSIGN '{' lista_nr '}'{
                               structDefinita($1->nume);
+                              $1->dimensiune=$7->nr;
                               tipuriEgale($7->tip,$1);
                               $$ = initTipParam($1,$2,0);
                               }      
            | TIP ID '[' NR ']'{
                               structDefinita($1->nume);
+                              $1->dimensiune=$4->val;
                               $$ = initTipParam($1,$2,0);
                               }
            | TIP ID '[' NR ']' ASSIGN '{' lista_nr '}'{
                               structDefinita($1->nume);
+                              $1->dimensiune=$4->val;
                               tipuriEgale($1, $8->tip);
                               $$ = initTipParam($1,$2,0);
                               }
            | CONST TIP ID '[' ']' ASSIGN '{' lista_nr '}'{
                               structDefinita($2->nume);
+                              $2->dimensiune=$8->nr;
                               tipuriEgale($8->tip, $2);
                               $$ = initTipParam($2,$3,1);
                               }
            | CONST TIP ID '[' NR ']' ASSIGN '{' lista_nr '}'{
                               structDefinita($2->nume);
+                              $2->dimensiune=$5->val;
                               tipuriEgale($9->tip, $2);
                               $$ = initTipParam($2,$3,1);
                               }
@@ -321,33 +326,50 @@ list :  statement
      | list statement {if($1 && $2)tipuriEgale($1,$2); if($1) $$=$1; else if($2) $$=$2;}
      ;
 VAR : ID {
-         //de adaugat verificare daca nu e vector
-         $$=initVar($1, -1, 0);
+         if(structDefinita($1) == 0){//nu sunt sigur daca am inteles ce e struct. daca e si vector, presupun ca merge aici
+            $$=initVar($1, -1, 0);
+         }
+         else $$=NULL;
          }
     | ID '[' NR ']'{
-         //de adaugat verificare daca e vector
+         if(structDefinita($1)){
+            $$=initVar($1, -1, 0);
+         }
+         else $$=NULL;
          $$=initVar($1, $3->val, 0);
          }
     | ID '[' VAR ']'{
-         //de adaugat verificare daca e vector
+         if(structDefinita($1)){
+            $$=initVar($1, -1, 0);
+         }
+         else $$=NULL;
          struct tip_t *tip_expr=initTip_t("int");
          tipuriEgale(tip_expr, tipVar($3));
          $$=initVar($1, 1, 0);
          }
     | ID '.' VAR {
-          //de adaugat verificare daca nu e vector
+         if(structDefinita($1) == 0){
+            $$=initVar($1, -1, 0);
+         }
+         else $$=NULL;
           isStruct($1,$3);
           $$=initVar($1, -1, tipVar($3));
           structura_curenta=NULL;
          }
     | ID '[' NR ']' '.' VAR{
-         //de adaugat verificare daca e vector
+         if(structDefinita($1)){
+            $$=initVar($1, -1, 0);
+         }
+         else $$=NULL;
          isStruct($1,$6);
          $$=initVar($1, $3->val,tipVar($6));
          structura_curenta=NULL;
          }
     | ID '[' VAR ']' '.' VAR{
-         //de adaugat verificare daca e vector
+         if(structDefinita($1)){
+            $$=initVar($1, -1, 0);
+         }
+         else $$=NULL;
          isStruct($1,$6);
          struct tip_t *tip_expr=initTip_t("int");
          tipuriEgale(tip_expr, tipVar($3));
@@ -403,18 +425,24 @@ statement : VAR NEWVAL VAR ';' {
           | WHILE '(' lista_cond ')' statement {$$=$5;}
           | EVAL '(' VAR ')' ';' {$$=NULL;}
           | EVAL '(' NR ')' ';' {if (corect){
-                                                 printf("Rezultatul expresiei din eval este %f\n", $3->val);
+                                                 printf("Rezultatul expresiei din eval este %d\n", $3->val);
                                              }
                                              else {printf("Valorile nu sunt de tip int\n");} $$=NULL;}
           | EVAL '(' lista_op ')' ';' {$$=NULL;} 
           | TYPEOF '(' VAR ')' ';'  {
-                                    $$=tipVar($3);
-                                    printf("Tipul variabilei este %s",tipVar($3)->nume);
+                                    if(varDefinita($3->nume)){
+                                        $$=tipVar($3);
+                                        printf("Tipul variabilei este %s\n",tipVar($3)->nume);
                                     }
-          | TYPEOF '(' NR ')' ';' { //nu inteleg la ce faci typeof
+                                    else $$=NULL; //crezi ca e ok asa?
+                                    }
+          | TYPEOF '(' NR ')' ';' {
+                                    $$=NULL;
+                                    printf("Tipul variabilei este %s\n",$3->tip->nume);
                                   }
-          | TYPEOF '(' LIT ')' ';' { //identic ca mai sus
-                                    }
+          | TYPEOF '(' LIT ')' ';' {$$=NULL;
+                                           printf("Tipul variabilei este char\n");
+                                           }
           | RET NR ';' { $$=$2->tip; }
           | RET LIT ';'{ struct tip_t *tip_expr=initTip_t("char"); $$=tip_expr; }
           | RET BVAL ';' { struct tip_t *tip_expr=initTip_t("bool"); $$=tip_expr; }
@@ -435,6 +463,7 @@ operatie : OP VAR {varDefinita($2->nume);$$=tipVar($2);}
          | OP apel {$$=$2;}
          ;
 OP : PLUS
+   | TIMES
    | MINUS
    | DIV
    | MOD
@@ -643,7 +672,7 @@ void printTable(){
 }
 
 bool varDefinita(char *nume) {
-    bool var=0;
+    int var=0;
     for (int i = 0; i < nrSimboluri; ++i) {
         if (strcmp(SymbolTable[i].nume, nume) == 0) {
             if(SymbolTable[i].tip_simbol == SIMBOL_VARIABILA) 
@@ -733,22 +762,23 @@ struct tip_t *tipVar(struct var *v) {
         if ((SymbolTable[i].tip_simbol == SIMBOL_VARIABILA || SymbolTable[i].tip_simbol == SIMBOL_CONST)  && strcmp(SymbolTable[i].nume, v->nume) == 0) {
             if (SymbolTable[i].functie == NULL && SymbolTable[i].structura == NULL)
                 rezultat = SymbolTable[i].tip;
-            if (SymbolTable[i].functie == NULL && SymbolTable[i].structura != NULL &&
+            else if (SymbolTable[i].functie == NULL && SymbolTable[i].structura != NULL &&
                 structura_curenta != NULL &&
                 strcmp(SymbolTable[i].structura, structura_curenta) == 0)
                 rezultat = SymbolTable[i].tip;
-            if (SymbolTable[i].functie != NULL && SymbolTable[i].structura == NULL &&
+            else if (SymbolTable[i].functie != NULL && SymbolTable[i].structura == NULL &&
                 structura_curenta == NULL && functie_curenta != NULL &&
                 structura_curenta == NULL && strcmp(SymbolTable[i].functie, functie_curenta) == 0)
                 rezultat = SymbolTable[i].tip;
-            if (SymbolTable[i].functie != NULL && SymbolTable[i].structura != NULL &&
+            else if (SymbolTable[i].functie != NULL && SymbolTable[i].structura != NULL &&
                 functie_curenta != NULL && structura_curenta != NULL &&
                 strcmp(SymbolTable[i].functie, functie_curenta) == 0 &&
                 strcmp(SymbolTable[i].structura, structura_curenta) == 0)
                 rezultat = SymbolTable[i].tip;
-        } else if (functie_curenta != NULL &&
-                   SymbolTable[i].tip_simbol == SIMBOL_FUNCTIE &&
-                   strcmp(SymbolTable[i].nume, functie_curenta) == 0) {
+        } 
+        else if (functie_curenta != NULL &&
+                SymbolTable[i].tip_simbol == SIMBOL_FUNCTIE &&
+                strcmp(SymbolTable[i].nume, functie_curenta) == 0) {
             for (struct lista_param_t *j = SymbolTable[i].param; j != NULL; j = j->urmator) {
                 if (strcmp(j->param->nume, v->nume) == 0)
                     rezultat = j->param->tip;

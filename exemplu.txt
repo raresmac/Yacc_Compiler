@@ -2,22 +2,12 @@ int a1;
 char c := 'a';
 int v [3] := { 1 , 2 , 3 } ;
 bool tru  := adevarat;
-int functieFaina(int x)
-incepe
-    for (int i:=1;| i<x | i:=i+1; )
-    {
-       x := x - 1;
-       return 5;
-    }
-termina
 nou tip nice { int st; int dr;}
 main:
 incepe
     int y := 3 ;
-    int x;
-    utip nice z;
-    z.st:=0;
-    if(tru==adevarat)
-        {y devine functieFaina(x);}
-    a1 devine -6 ;
+    int x := 2;
+    TypeOf(4.5);
+    TypeOf('z');
+    Eval(2*4);
 termina

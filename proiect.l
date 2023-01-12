@@ -23,6 +23,7 @@
 "const" {yylval.strval=strdup(yytext); return CONST;}
 ":="|"devine" {yylval.strval=strdup(yytext); return ASSIGN;}
 "cu"|"plus"|"+" {yylval.strval=strdup(yytext); return PLUS;}
+"ori"|"*" {yylval.strval=strdup(yytext); return TIMES;}
 "+="|"adauga" {yylval.strval=strdup(yytext); return ADD;}
 "fara"|"minus"|"-" {yylval.strval=strdup(yytext); return MINUS;}
 "-="|"scade" {yylval.strval=strdup(yytext); return DEDUCT;}

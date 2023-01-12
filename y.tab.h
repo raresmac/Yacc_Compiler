@@ -75,24 +75,25 @@ extern int yydebug;
     LW = 276,                      /* LW  */
     ASSIGN = 277,                  /* ASSIGN  */
     PLUS = 278,                    /* PLUS  */
-    MINUS = 279,                   /* MINUS  */
-    ADD = 280,                     /* ADD  */
-    DEDUCT = 281,                  /* DEDUCT  */
-    EQUAL = 282,                   /* EQUAL  */
-    DIV = 283,                     /* DIV  */
-    MOD = 284,                     /* MOD  */
-    AND = 285,                     /* AND  */
-    OR = 286,                      /* OR  */
-    NOT = 287,                     /* NOT  */
-    XOR = 288,                     /* XOR  */
-    EVAL = 289,                    /* EVAL  */
-    MAIN = 290,                    /* MAIN  */
-    TRU = 291,                     /* TRU  */
-    FALS = 292,                    /* FALS  */
-    RET = 293,                     /* RET  */
-    UTYPE = 294,                   /* UTYPE  */
-    NRI = 295,                     /* NRI  */
-    NRF = 296                      /* NRF  */
+    TIMES = 279,                   /* TIMES  */
+    MINUS = 280,                   /* MINUS  */
+    ADD = 281,                     /* ADD  */
+    DEDUCT = 282,                  /* DEDUCT  */
+    EQUAL = 283,                   /* EQUAL  */
+    DIV = 284,                     /* DIV  */
+    MOD = 285,                     /* MOD  */
+    AND = 286,                     /* AND  */
+    OR = 287,                      /* OR  */
+    NOT = 288,                     /* NOT  */
+    XOR = 289,                     /* XOR  */
+    EVAL = 290,                    /* EVAL  */
+    MAIN = 291,                    /* MAIN  */
+    TRU = 292,                     /* TRU  */
+    FALS = 293,                    /* FALS  */
+    RET = 294,                     /* RET  */
+    UTYPE = 295,                   /* UTYPE  */
+    NRI = 296,                     /* NRI  */
+    NRF = 297                      /* NRF  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -122,30 +123,31 @@ extern int yydebug;
 #define LW 276
 #define ASSIGN 277
 #define PLUS 278
-#define MINUS 279
-#define ADD 280
-#define DEDUCT 281
-#define EQUAL 282
-#define DIV 283
-#define MOD 284
-#define AND 285
-#define OR 286
-#define NOT 287
-#define XOR 288
-#define EVAL 289
-#define MAIN 290
-#define TRU 291
-#define FALS 292
-#define RET 293
-#define UTYPE 294
-#define NRI 295
-#define NRF 296
+#define TIMES 279
+#define MINUS 280
+#define ADD 281
+#define DEDUCT 282
+#define EQUAL 283
+#define DIV 284
+#define MOD 285
+#define AND 286
+#define OR 287
+#define NOT 288
+#define XOR 289
+#define EVAL 290
+#define MAIN 291
+#define TRU 292
+#define FALS 293
+#define RET 294
+#define UTYPE 295
+#define NRI 296
+#define NRF 297
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 105 "proiect.y"
+#line 104 "proiect.y"
 
     struct valnr_t *valnr;
     int vali;
@@ -158,7 +160,7 @@ union YYSTYPE
     struct var *v; 
     struct tip_t* tip;
 
-#line 162 "y.tab.h"
+#line 164 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
