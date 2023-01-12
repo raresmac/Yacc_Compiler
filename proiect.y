@@ -8,6 +8,7 @@ extern char* yytext;
 extern int yylineno;
 char *functie_curenta = NULL;
 char *structura_curenta = NULL;
+char *last_fct=NULL;
 int corect = 1;
 /* TO DO
 1) implementare eval() (doar pt int uri)
@@ -139,13 +140,13 @@ progr : optionale bloc{
                        printf("Incorect semantic\n");
                    }
       ;
-optionale : var_globale functii user_types {functie_curenta="main";}
-      | functii user_types {functie_curenta="main";}
-      | var_globale  user_types {functie_curenta="main";}
-      | var_globale  functii {functie_curenta="main";}
-      | user_types {functie_curenta="main";}
-      | functii {functie_curenta="main";}
-      | var_globale {functie_curenta="main";}
+optionale : var_globale functii user_types {functie_curenta="main";last_fct="main";}
+      | functii user_types {functie_curenta="main";last_fct="main";}
+      | var_globale  user_types {functie_curenta="main";last_fct="main";}
+      | var_globale  functii {functie_curenta="main";last_fct="main";}
+      | user_types {functie_curenta="main";last_fct="main";}
+      | functii {functie_curenta="main";last_fct="main";}
+      | var_globale {functie_curenta="main";last_fct="main";}
       ;
 var_globale : declaratie ';' { 
                       if($1->cons) 
@@ -334,7 +335,7 @@ user_type : NEWTYPE ID '{' declaratii '}' {
 functii : functie
         | functii functie
         ;
-functie : declaratie_fct BGIN list END{ functie_curenta = NULL; tipuriEgale($1, $3);}
+functie : declaratie_fct BGIN list END{ functie_curenta = last_fct; tipuriEgale($1, $3);}
         ;
 declaratie_fct : TIP ID '(' lista_param ')'{
                structDefinita($1->nume);
