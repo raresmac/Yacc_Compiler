@@ -1,7 +1,7 @@
-a1	int	globala	c	char	globala	v	int[3]	globala	tru	bool	globala	x	int	locala	în func functieFaina	
-i	int	locala	în func functieFaina	
-st	int	globala	dr	int	globala	y	int	locala	în func main	
-x	int	locala	în func main	
-l	int[2]	locala	în func main	
-z	nice	locala	în func main	
-pro	int	locala	în func main	
+a1	int	globala	c	char	globala	v	int[3]	globala	tru	bool	globala	x	int	locala	in func functieFaina	
+i	int	locala	in func functieFaina	
+st	int	globala	dr	int	globala	y	int	locala	in func main	
+x	int	locala	in func main	
+l	int[3]	locala	in func main	
+z	nice	locala	in func main	
+pro	int	locala	in func main	

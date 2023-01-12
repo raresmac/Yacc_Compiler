@@ -16,7 +16,7 @@ incepe
     int y := 3;
     int x := 2;
     TypeOf(5.7);
-    int l[3.5];
+    int l[3];
     utip nice z;
     int pro := 756;
     z.st:=0;
