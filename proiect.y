@@ -11,8 +11,6 @@ char *structura_curenta = NULL;
 int corect = 1;
 /* TO DO
 1) implementare eval() (doar pt int uri)
-2) free memory? vezi val1 de la lab
-3) bug in care valoarea floatului nu e citita corect (vezi typeof-ul din exemplu)
 OBS:
 -TESTING
 -lista_op si lista_cond sa permita paranteze cum trebuie..nu am testat prea mult
@@ -411,12 +409,7 @@ SVAR : ID {
             //exit(0);
          }
          else
-               printf("Linia %d: Asigurati-va ca %s e positiv si <= %d \n",yylineno,$3->nume, tipVar($$)->dimensiune);
-         /*posInt($3); but for var
-         if(tipVar($$)->dimensiune<$3->val){
-            printf("Linia %d: Lungimea vectorului %s e mai mica decat indicele dat\n",yylineno,$1->nume);
-            //exit(0);
-         }*/
+               printf("Linia %d: warning: posibil ca %s sa nu fie positiv si <= %d \n",yylineno,$3->nume, tipVar($$)->dimensiune);
          structura_curenta=tipVar($$)->nume;
          }
     ;
@@ -465,33 +458,48 @@ statement : VAR NEWVAL VAR ';' {
           | FOR '(' statement '|' lista_cond '|' statement ')' statement {$$=$9;}
           | WHILE '(' lista_cond ')' '{' list '}' {$$=$6;}
           | WHILE '(' lista_cond ')' statement {$$=$5;}
-          | EVAL '(' VAR ')' ';' {$$=NULL;}
+          | EVAL '(' VAR ')' ';' {
+                               struct tip_t *tip_expr=initTip_t("int");
+                               tipuriEgale(tipVar($3), tip_expr); 
+                               $$=NULL;
+                               }
           | EVAL '(' NR ')' ';' {
                                struct tip_t *tip_expr=initTip_t("int");
                                tipuriEgale($3->tip, tip_expr); 
                                if (corect){ printf("Rezultatul expresiei din eval este %f\n", $3->val); }
-                               else {printf("Linia %d: Valorile nu sunt de tip int\n",yylineno);} $$=NULL;
                                }
-          | EVAL '(' lista_op ')' ';' {$$=NULL;}
+          | EVAL '(' lista_op ')' ';' {
+                               struct tip_t *tip_expr=initTip_t("int");
+                               tipuriEgale($3, tip_expr); 
+                               $$=NULL;
+                               }
           | TYPEOF '(' VAR ')' ';'  {
                                     $$=NULL;
+                                    if(corect){
                                     if(!$3->param)
                                         printf("Tipul variabilei %s este %s\n", $3->nume, tipVar($3)->nume);
                                     else
                                         printf("Tipul variabilei %s.%s este %s\n",$3->nume, $3->param->nume, tipVar($3)->nume);
                                     }
+                                    }
           | TYPEOF '(' NR ')' ';' {
                                     $$=NULL;
+                                    if(corect){
                                     if(strcmp($3->tip->nume,"int"))
                                         printf("Tipul numarului %f este %s\n", $3->val, $3->tip->nume);
                                     else
                                         printf("Tipul numarului %d este %s\n", (int)$3->val, $3->tip->nume);
                                     }
+                                    }
           | TYPEOF '(' LIT ')' ';' { $$=NULL;
+                                    if(corect){
                                     printf("Tipul literei %s este char\n", $3);
                                     }
+                                    }
           | TYPEOF '(' lista_op ')' ';'{ $$=NULL;
+                                    if(corect){
                                     printf("Tipul rezultatului operatiilor este %s\n", $3->nume);
+                                    }
                                     }
           | RET NR ';' { $$=$2->tip; }
           | RET LIT ';'{ struct tip_t *tip_expr=initTip_t("char"); $$=tip_expr; }
@@ -587,9 +595,14 @@ lista_nr : NR {$$ = initTipListNr($1); $$->lg=1;}
            ;
 lista_lit :  LIT {$$ = initTipListLit($1); $$->lg=1;}
            | lista_lit ',' LIT {
-                               $$=initTipListLit($3);
+                               $$=$1;
                                $$->lg=$1->lg+1;
-                               $1->urmator=$$;
+                               while($1->urmator)
+                               {
+                                   $1=$1->urmator;
+                                   $1->lg+=1;
+                               }
+                               $1->urmator=initTipListLit($3);
                              }
            ;
 bloc : MAIN BGIN list END
