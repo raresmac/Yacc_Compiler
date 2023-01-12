@@ -11,6 +11,7 @@ char *structura_curenta = NULL;
 int corect = 1;
 /* TO DO
 1) implementare eval() (doar pt int uri)
+2) free memory? vezi val1 de la lab
 OBS:
 -TESTING
 -lista_op si lista_cond sa permita paranteze cum trebuie..nu am testat prea mult
@@ -363,7 +364,7 @@ VAR : SVAR {structura_curenta=NULL;}
           isStruct(tipVar($1)->nume);
           $$=initVar($1->nume, -1, $3);
           if(tipVar($$)->dimensiune){
-            printf("Incorect semantic!");
+            printf("%s e vector, trebuie apelat un element al lui\n",$1->nume);
             //exit(0);
          }
        }
@@ -372,7 +373,8 @@ SVAR : ID {
          $$=initVar($1, -1, 0);
          varDefinita($1);
          if(tipVar($$)->dimensiune){
-            printf("Incorect semantic!");
+            printf("%s e vector, trebuie apelat un element al lui\n",$1);
+            corect=0;
             //exit(0);
          }
          structura_curenta=tipVar($$)->nume;
@@ -381,12 +383,13 @@ SVAR : ID {
          $$=initVar($1, $3->val, 0);
          varDefinita($1);
          if(!tipVar($$)->dimensiune){
-            printf("Incorect semantic!");
+            printf("%s nu e vector, nu puteti apela un element al lui\n",$1);
+            corect=0;
             //exit(0);
          }
          posInt($3);
          if(tipVar($$)->dimensiune<$3->val){
-            printf("Incorect semantic!");
+            printf("Warning: Lungimea vectorului %s e mai mica decat indicele dat\n",$1);
             //exit(0);
          }
          structura_curenta=tipVar($$)->nume;
@@ -397,12 +400,15 @@ SVAR : ID {
          $$=initVar($1, 1, 0);
          varDefinita($1); 
          if(!tipVar($$)->dimensiune){
-            printf("Incorect semantic!");
+            printf("%s nu e vector, nu puteti apela un element al lui\n",$1);
+            corect=0;
             //exit(0);
          }
+         else
+               printf("Warning: Asigurativa ca %s e positiv si <= %d \n",$3->nume, tipVar($$)->dimensiune);
          /*posInt($3); but for var
          if(tipVar($$)->dimensiune<$3->val){
-            printf("Incorect semantic!");
+            printf("Lungimea vectorului %s e mai mica decat indicele dat\n",$1->nume);
             //exit(0);
          }*/
          structura_curenta=tipVar($$)->nume;
@@ -470,7 +476,10 @@ statement : VAR NEWVAL VAR ';' {
                                     }
           | TYPEOF '(' NR ')' ';' {
                                     $$=NULL;
-                                    printf("Tipul numarului %f este %s\n", $3->val, $3->tip->nume);
+                                    if(strcmp($3->tip->nume,"int")==0)
+                                        printf("Tipul numarului %d este %s\n", (int)$3->val, $3->tip->nume);
+                                    else
+                                        printf("Tipul numarului %f este %s\n", $3->val, $3->tip->nume);
                                     }
           | TYPEOF '(' LIT ')' ';' { $$=NULL;
                                     printf("Tipul literei %s este char\n", $3);
@@ -560,10 +569,14 @@ NR: NRI { $$=InitNr("int",$1);}
   ;
 lista_nr : NR {$$ = initTipListNr($1); $$->lg=1;}
            | lista_nr ',' NR {
-                               tipuriEgale($1->tip,$3->tip);
-                               $$=initTipListNr($3);
+                               $$=$1;
                                $$->lg=$1->lg+1;
-                               $1->urmator=$$;
+                               while($1->urmator)
+                               {
+                                   $1=$1->urmator;
+                                   $1->lg+=1;
+                               }
+                               $1->urmator=initTipListNr($3);
                              }
            ;
 lista_lit :  LIT {$$ = initTipListLit($1); $$->lg=1;}
