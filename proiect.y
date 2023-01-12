@@ -205,7 +205,7 @@ declaratie : TIP ID ASSIGN LIT{
                               }
                               posInt($4);
                               lungimiEgale($4->val,$8->lg);
-                              $1->dimensiune = $8->lg;
+                              $1->dimensiune = $4->val;
                               structDefinita($1->nume);
                               struct tip_t *tip_expr=initTip_t("char");
                               tipuriEgale(tip_expr, $1);
@@ -218,7 +218,7 @@ declaratie : TIP ID ASSIGN LIT{
                               }
                               posInt($5);
                               lungimiEgale($5->val,$9->lg);
-                              $2->dimensiune = $9->lg;
+                              $2->dimensiune = $5->val;
                               structDefinita($2->nume);
                               struct tip_t *tip_expr=initTip_t("char");
                               tipuriEgale(tip_expr, $2);
@@ -275,7 +275,7 @@ declaratie : TIP ID ASSIGN LIT{
                               }
                               posInt($4);
                               lungimiEgale($4->val,$8->lg);
-                              $1->dimensiune = $8->lg;
+                              $1->dimensiune = $4->val;
                               structDefinita($1->nume);
                               tipuriEgale($1, $8->tip);
                               $$ = initTipParam($1,$2,0);
@@ -293,7 +293,7 @@ declaratie : TIP ID ASSIGN LIT{
                               }
                               posInt($5);
                               lungimiEgale($5->val,$9->lg);
-                              $2->dimensiune = $9->lg;
+                              $2->dimensiune = $5->val;
                               structDefinita($2->nume);
                               tipuriEgale($9->tip, $2);
                               $$ = initTipParam($2,$3,1);
