@@ -1,0 +1,1 @@
+functieFaina	int(int)	

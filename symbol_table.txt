@@ -1,2 +1,6 @@
-a1	int	globala	c	char	globala	v	int[0][0][0]	globala	tru	bool	globala	st	int	globala	dr	int	globala	y	int	locala	în func main	
+a1	int	globala	c	char	globala	v	int[3]	globala	tru	bool	globala	x	int	locala	în func functieFaina	
+i	int	locala	în func functieFaina	
+st	int	globala	dr	int	globala	y	int	locala	în func main	
 x	int	locala	în func main	
+l	int	locala	în func main	
+z	nice	locala	în func main	

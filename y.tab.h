@@ -75,11 +75,11 @@ extern int yydebug;
     LW = 276,                      /* LW  */
     ASSIGN = 277,                  /* ASSIGN  */
     PLUS = 278,                    /* PLUS  */
-    TIMES = 279,                   /* TIMES  */
-    MINUS = 280,                   /* MINUS  */
-    ADD = 281,                     /* ADD  */
-    DEDUCT = 282,                  /* DEDUCT  */
-    EQUAL = 283,                   /* EQUAL  */
+    MINUS = 279,                   /* MINUS  */
+    ADD = 280,                     /* ADD  */
+    DEDUCT = 281,                  /* DEDUCT  */
+    EQUAL = 282,                   /* EQUAL  */
+    TIMES = 283,                   /* TIMES  */
     DIV = 284,                     /* DIV  */
     MOD = 285,                     /* MOD  */
     AND = 286,                     /* AND  */
@@ -123,11 +123,11 @@ extern int yydebug;
 #define LW 276
 #define ASSIGN 277
 #define PLUS 278
-#define TIMES 279
-#define MINUS 280
-#define ADD 281
-#define DEDUCT 282
-#define EQUAL 283
+#define MINUS 279
+#define ADD 280
+#define DEDUCT 281
+#define EQUAL 282
+#define TIMES 283
 #define DIV 284
 #define MOD 285
 #define AND 286
@@ -147,7 +147,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 104 "proiect.y"
+#line 103 "proiect.y"
 
     struct valnr_t *valnr;
     int vali;

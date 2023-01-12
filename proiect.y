@@ -11,8 +11,6 @@ char *structura_curenta = NULL;
 int corect = 1;
 /* TO DO
 1) implementare eval() (doar pt int uri)
-2) verificat ca id[var]: var e int pozitiv 
-3) sa se inchida programul automat daca gaseste o linie gresita (doar la anumite erori)
 OBS:
 -TESTING
 -lista_op si lista_cond sa permita paranteze cum trebuie..nu am testat prea mult
@@ -200,6 +198,10 @@ declaratie : TIP ID ASSIGN LIT{
                               $$ = initTipParam($1,$2,0);
                               }
            | TIP ID '[' NR ']' ASSIGN '{' lista_lit '}'{
+                              if($4->val < 1){
+                                printf("Dimensiunea nu este pozitiva!\n");
+                                exit(0);
+                              }
                               posInt($4);
                               lungimiEgale($4->val,$8->lg);
                               $1->dimensiune = $8->lg;
@@ -209,6 +211,10 @@ declaratie : TIP ID ASSIGN LIT{
                               $$ = initTipParam($1,$2,0);
                               }
            | CONST TIP ID '[' NR ']' ASSIGN '{' lista_lit '}'{
+                              if($5->val < 1){
+                                printf("Dimensiunea nu este pozitiva!\n");
+                                exit(0);
+                              }
                               posInt($5);
                               lungimiEgale($5->val,$9->lg);
                               $2->dimensiune = $9->lg;
@@ -252,12 +258,20 @@ declaratie : TIP ID ASSIGN LIT{
                               $$ = initTipParam($1,$2,0);
                               }      
            | TIP ID '[' NR ']'{
+                              if($4->val < 1){
+                                printf("Dimensiunea nu este pozitiva!\n");
+                                exit(0);
+                              }
                               posInt($4);
                               $1->dimensiune = $4->val;
                               structDefinita($1->nume);
                               $$ = initTipParam($1,$2,0);
                               }
            | TIP ID '[' NR ']' ASSIGN '{' lista_nr '}'{
+                              if($4->val < 1){
+                                printf("Dimensiunea nu este pozitiva!\n");
+                                exit(0);
+                              }
                               posInt($4);
                               lungimiEgale($4->val,$8->lg);
                               $1->dimensiune = $8->lg;
@@ -272,6 +286,10 @@ declaratie : TIP ID ASSIGN LIT{
                               $$ = initTipParam($2,$3,1);
                               }
            | CONST TIP ID '[' NR ']' ASSIGN '{' lista_nr '}'{
+                              if($5->val < 1){
+                                printf("Dimensiunea nu este pozitiva!\n");
+                                exit(0);
+                              }
                               posInt($5);
                               lungimiEgale($5->val,$9->lg);
                               $2->dimensiune = $9->lg;
@@ -749,8 +767,10 @@ void funDefinita(char *nume, struct lista_param_t *arg) {
         if (SymbolTable[i].tip_simbol == SIMBOL_FUNCTIE && strcmp(SymbolTable[i].nume, nume) == 0) {
             if ((SymbolTable[i].structura != NULL && structura_curenta != NULL &&
                 strcmp(SymbolTable[i].structura, structura_curenta) == 0)||SymbolTable[i].structura == NULL)
-                 if(!apelCorect(arg,SymbolTable[i].param))
+                 if(!apelCorect(arg,SymbolTable[i].param)){
                      printf("În apelul funcției %s numărul de argumente este greșit\n", nume);
+                     exit(0);
+                 }
                  else
                      return;
                      
